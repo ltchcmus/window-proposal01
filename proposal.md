@@ -8,7 +8,7 @@
 
 | STT | Họ và Tên           | MSSV     | Vai trò                    | Email                         | Github                                                                              |
 | --- | ------------------- | -------- | -------------------------- | ----------------------------- | ----------------------------------------------------------------------------------- |
-| 1   | Nguyễn Hưng Thịnh   | 23120200 | Backend Developer          | nguyenhungthinha1@gmail.com   | [Link](https://github.com/oppaii230205)                                             |
+| 1   | Nguyễn Hưng Thịnh   | 23120200 | Backend Developer          | nguyenhungthinha1@gmail.com   | [oppaii230205](https://github.com/oppaii230205)                                     |
 | 2   | Lê Thành Công       | 23120222 | Leader / Backend Developer | ltchcmus@gmail.com            | [ltchcmus](https://github.com/ltchcmus) / [05-victor](https://github.com/05-victor) |
 | 3   | Lê Tấn Hiệp         | 23120255 | Frontend Developer         | tanhiep24135@gmail.com        | [github]                                                                            |
 | 4   | Tống Dương Thái Hòa | 23120262 | Frontend Developer         | tdthoa.hry@gmai.com           | [henry-banana](https://github.com/henry-banana)                                     |
@@ -628,11 +628,55 @@ Ngoài vai trò Leader và Backend Developer trong dự án chính, Leader còn 
 
 **[PHÂN CÔNG: FRONTEND + BACKEND]**
 
-### 4.1. Clean Architecture (Backend)
+### 4.1. Tổng quan
+
+**[PHÂN CÔNG: BACKEND DEVELOPER - Thịnh]**
+
+Hệ thống được thiết kế và phát triển theo hướng **Clean Architecture** kết hợp với **Three-Layer Architecture (Presentation - Business - Data)**.  
+Mục tiêu của kiến trúc này là đảm bảo:
+
+- **Tách biệt trách nhiệm (Separation of Concerns)** rõ ràng giữa các tầng.
+- **Dễ dàng bảo trì và mở rộng (Maintainability & Extensibility)** trong tương lai.
+- **Tăng khả năng kiểm thử (Testability)** nhờ áp dụng Dependency Injection.
+- **Bảo mật và tính ổn định cao (Security & Stability)** cho hệ thống thương mại điện tử.
+
+Hệ thống được xây dựng trên nền **ASP.NET Core**, sử dụng **Entity Framework Core** cho quản lý cơ sở dữ liệu, **Dependency Injection** để quản lý vòng đời đối tượng, và **Repository Pattern** để tách biệt logic truy cập dữ liệu khỏi nghiệp vụ.
+
+---
 
 **[PHÂN CÔNG: BACKEND DEVELOPER - Thịnh]**
 
 #### 4.1.1. Layers Overview
+
+Cấu trúc tổng thể của hệ thống backend được mô tả qua bốn tầng chính:
+
+1. **Presentation Layer (API Controllers)**
+
+   - Tiếp nhận và xử lý request từ client.
+   - Thực hiện validation dữ liệu đầu vào.
+   - Gọi tới các service tương ứng để xử lý nghiệp vụ.
+   - Trả kết quả về cho client dưới dạng HTTP response chuẩn hóa.
+
+2. **Application / Service Layer**
+
+   - Chứa logic nghiệp vụ của hệ thống.
+   - Đóng vai trò cầu nối giữa Controller và Repository.
+   - Thực hiện các xử lý như xác thực, kiểm tra quyền, xử lý dữ liệu, gửi email, sinh JWT,...
+
+3. **Domain Layer (Entities & Interfaces)**
+
+   - Định nghĩa các **thực thể (Entities)**, **interface (contracts)** cho repository và service.
+   - Là trung tâm logic nghiệp vụ, độc lập với cơ sở dữ liệu hoặc framework.
+
+4. **Infrastructure / Data Layer**
+   - Chịu trách nhiệm thao tác với cơ sở dữ liệu thông qua **Entity Framework Core**.
+   - Chứa các **repository hiện thực**, **DbContext**, **migration scripts**, và các **adapter kết nối** dịch vụ ngoài như email, JWT.
+
+> **Nguyên tắc phụ thuộc (Dependency Rule):**  
+> Các tầng cấp cao chỉ phụ thuộc vào tầng cấp thấp hơn thông qua **interface**,  
+> tuyệt đối không phụ thuộc vào các hiện thực cụ thể (concrete classes).
+
+Sơ đồ minh họa:
 
 ```
 ┌─────────────────────────────────────┐
@@ -644,35 +688,494 @@ Ngoài vai trò Leader và Backend Developer trong dự án chính, Leader còn 
 ├─────────────────────────────────────┤
 │          Infrastructure Layer       │ ← Database, External APIs
 └─────────────────────────────────────┘
-
-Sử dụng ảnh mô hình để mô tả chi tiết hơn
 ```
 
-#### 4.1.2. Dependency Direction
+#### 4.1.2. Luồng xử lý yêu cầu (Request Flow)
 
-[Mô tả dependency inversion principle]
+Khi người dùng thực hiện một hành động (ví dụ: đăng nhập), luồng xử lý sẽ diễn ra như sau:
+
+1. Client gửi HTTP request đến endpoint /api/auth/login.
+
+2. AuthController nhận request, xác thực dữ liệu đầu vào.
+
+3. Gọi AuthService.LoginAsync() để xử lý nghiệp vụ.
+
+4. AuthService sử dụng UserRepository để truy vấn dữ liệu người dùng từ DB.
+
+5. Nếu hợp lệ, AuthService sinh JWT token và trả kết quả về controller.
+
+6. Controller trả về ApiResponse chứa thông tin đăng nhập và token cho client.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as AuthController
+    participant S as AuthService
+    participant R as IUserRepository
+    participant J as IJwtService
+    participant D as Database
+
+    C->>A: 1. POST /api/v1/auth/login (với LoginRequest)
+
+    activate A
+    A->>A: 2. Validate(LoginRequest)
+    A->>S: 3. LoginAsync(request)
+
+    activate S
+    S->>R: 4. GetByUsernameAsync() / GetByEmailAsync()
+
+    activate R
+    R->>D: 5. SELECT * FROM users WHERE...
+    activate D
+    D-->>R: 6. User Entity (hoặc null)
+    deactivate D
+    R-->>S: 7. Trả về User Entity
+    deactivate R
+
+    alt User tồn tại và Mật khẩu hợp lệ
+        S->>S: 8. Verify Password (BCrypt.Verify)
+        S->>J: 9. GenerateAccessTokenAsync(user)
+
+        activate J
+        J-->>S: 10. Trả về JWT Token
+        deactivate J
+
+        S-->>A: 11. LoginResponse (chứa token)
+    else User không tồn tại hoặc Mật khẩu sai
+        S-->>A: Ném ra UnauthorizedAccessException
+    end
+
+    deactivate S
+
+    alt Đăng nhập thành công
+        A-->>C: 12. HTTP 200 OK (ApiResponse - Success)
+    else Đăng nhập thất bại
+        A-->>C: HTTP 401 Unauthorized (ApiResponse - Error)
+    end
+
+    deactivate A
+```
+
+#### 4.1.3. Dependency Injection
+
+Dự án áp dụng Dependency Injection (DI) để quản lý vòng đời và phụ thuộc giữa các lớp.
+Các interface và hiện thực của chúng được đăng ký trong Program.cs như sau:
+
+```csharp
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+//...
+```
+
+Nhờ cơ chế này, các lớp như AuthController chỉ cần phụ thuộc vào interface (IAuthService),
+giúp tăng khả năng test, bảo trì, và thay thế trong tương lai.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class DI_Container {
+        <<Service Registry>>
+        +Đăng ký(Interface, Implementation)
+        +Phân giải<T>()
+    }
+
+    class AuthController {
+        -IAuthService authService
+        +AuthController(IAuthService authService)
+    }
+
+    class AuthService {
+        -IUserRepository userRepository
+        -IJwtService jwtService
+        +AuthService(IUserRepository userRepo, IJwtService jwtSvc)
+    }
+
+    class UserRepository
+    class JwtService
+
+    class IAuthService {
+        <<interface>>
+    }
+
+    class IUserRepository {
+        <<interface>>
+    }
+
+    class IJwtService {
+        <<interface>>
+    }
+
+    DI_Container ..> AuthController : "Injects (tiêm vào)"
+    AuthController o-- IAuthService : "Depends on (phụ thuộc vào)"
+
+    DI_Container ..> AuthService : "Injects"
+    AuthService o-- IUserRepository : "Depends on"
+    AuthService o-- IJwtService : "Depends on"
+
+    IAuthService <|.. AuthService : "Implements (hiện thực hóa)"
+    IUserRepository <|.. UserRepository : "Implements"
+    IJwtService <|.. JwtService : "Implements"
+```
 
 ### 4.2. Three Layer Architecture (Backend)
 
 **[PHÂN CÔNG: BACKEND DEVELOPER - Thịnh]**
 
-#### 4.2.1. Presentation Layer
+Để đảm bảo tính linh hoạt, dễ bảo trì và mở rộng, hệ thống MyShop2025 được thiết kế theo kiến trúc 3 lớp (3-Tier Architecture). Kiến trúc này phân tách ứng dụng thành ba tầng logic riêng biệt: Tầng Trình Bày (Presentation Layer), Tầng Nghiệp Vụ (Business Logic Layer), và Tầng Truy Cập Dữ Liệu (Data Access Layer). Mỗi tầng có một trách nhiệm cụ thể và chỉ giao tiếp với các tầng liền kề nó, giúp giảm sự phụ thuộc và tăng tính module hóa.
 
-- **Controllers:** [Mô tả]
-- **DTOs:** [Mô tả]
-- **Mappers:** [Mô tả]
+Sơ đồ luồng dữ liệu tổng quan giữa các tầng được minh họa như sau:
+
+```mermaid
+graph TD
+    subgraph Client
+        A[WinUI 3 App]
+    end
+
+    subgraph Server
+        subgraph Presentation Layer
+            B(API Controllers)
+            C(Data Transfer Objects - DTOs)
+            B -- validates & uses --> C
+        end
+
+        subgraph Business Logic Layer
+            D(Services & Interfaces)
+            E(Domain Logic & Rules)
+            D -- implements --> E
+        end
+
+        subgraph Data Access Layer
+            F(Repositories & Interfaces)
+            G(DbContext - Entity Framework Core)
+            H(Entities)
+            F -- uses --> G
+            G -- maps to --> H
+        end
+
+        subgraph Database
+            I[PostgreSQL Database]
+        end
+    end
+
+    A -- HTTP Request (sử dụng DTOs) --> B
+    B -- Gọi phương thức --> D
+    D -- Gọi phương thức --> F
+    F -- Truy vấn thông qua EF Core --> I
+    I -- Trả về dữ liệu --> F
+    F -- Trả về Entities --> D
+    D -- Ánh xạ Entities sang DTOs --> B
+    B -- HTTP Response (chứa DTOs) --> A
+```
+
+#### 4.2.1. Tầng Trình Bày (Presentation Layer)
+
+Tầng này là bộ mặt của backend, chịu trách nhiệm xử lý mọi giao tiếp với thế giới bên ngoài (cụ thể là ứng dụng client WinUI 3). Nó không chứa logic nghiệp vụ mà chỉ đóng vai trò trung gian, xác thực và điều hướng yêu cầu.
+
+**Controllers**: Là các điểm cuối (endpoints) của API, tiếp nhận các yêu cầu HTTP (GET, POST, PUT, DELETE). Mỗi Controller trong dự án (`AuthController`, `UserController`, `RoleController`,...) được thiết kế để xử lý một nhóm chức năng cụ thể. Chúng chịu trách nhiệm xác thực dữ liệu đầu vào từ client thông qua các DTOs, sau đó gọi đến các phương thức tương ứng ở tầng Business Logic để xử lý nghiệp vụ. Cuối cùng, Controller định dạng dữ liệu trả về từ tầng Business và gói chúng trong một cấu trúc `ApiResponse<T>` thống nhất trước khi gửi lại cho client dưới dạng JSON.
+
+- **Ví dụ thực tiễn**:
+
+- Trong `AuthController.cs`, phương thức Register được định nghĩa để xử lý yêu cầu đăng ký tài khoản mới.
+
+  ```csharp
+  // File: src/MyShop.Server/Controllers/AuthController.cs
+
+  [ApiController]
+  [Route("api/v1/[controller]")]
+  public class AuthController : ControllerBase
+  {
+      // ... DI cho IAuthService
+
+      [HttpPost("register")] // Định nghĩa endpoint: POST /api/v1/auth/register
+      public async Task<ActionResult<ApiResponse<CreateUserResponse>>> Register(
+          [FromBody] CreateUserRequest request) // Nhận dữ liệu từ body của request, ánh xạ vào DTO
+      {
+          if (!ModelState.IsValid) // Xác thực dữ liệu đầu vào dựa trên các quy tắc trong DTO
+          {
+              // Trả về lỗi 400 nếu dữ liệu không hợp lệ
+              return BadRequest(...);
+          }
+
+          // Gọi đến tầng Business Logic để xử lý nghiệp vụ
+          var response = await _authService.RegisterAsync(request);
+
+          // Gói kết quả vào một cấu trúc ApiResponse chuẩn và trả về cho client
+          return Ok(ApiResponse<CreateUserResponse>.SuccessResponse(response, ...));
+      }
+  }
+  ```
+
+- Thống nhất kiểu trả về bằng cấu trúc `ApiResponse<>`, giúp bao bọc thông tin & kiểm soát lỗi dễ dàng
+
+```csharp
+public class ApiResponse<T>
+{
+    public int Code { get; set; }
+
+    public string Message { get; set; } = string.Empty;
+
+    public T? Result { get; set; }
+
+    public bool Success => Code >= 200 && Code < 300;
+
+    public static ApiResponse<T> SuccessResponse(T data, string message = "Success", int code = 200)
+    {
+        return new ApiResponse<T>
+        {
+            Code = code,
+            Message = message,
+            Result = data
+        };
+    }
+
+    public static ApiResponse<T> ErrorResponse(string message, int code = 400)
+    {
+        return new ApiResponse<T>
+        {
+            Code = code,
+            Message = message,
+            Result = default
+        };
+    }
+
+    public static ApiResponse<T> NotFoundResponse(string message = "Resource not found")
+    {
+        return new ApiResponse<T>
+        {
+            Code = 404,
+            Message = message,
+            Result = default
+        };
+    }
+
+    public static ApiResponse<T> UnauthorizedResponse(string message = "Unauthorized")
+    {
+        return new ApiResponse<T>
+        {
+            Code = 401,
+            Message = message,
+            Result = default
+        };
+    }
+
+    /// ...
+}
+```
+
+=> Như ví dụ trên, Controller chỉ làm nhiệm vụ điều phối, đảm bảo tính đơn nhất trách nhiệm (Single Responsibility Principle).
+
+**DTOs (Data Transfer Objects)**: Là các lớp đối tượng đơn giản (POCO - Plain Old C# Object) được sử dụng để truyền dữ liệu giữa client và server. Việc sử dụng DTOs giúp:
+
+- Tách biệt (Decoupling): Tách biệt mô hình dữ liệu của tầng DAL (Entities) khỏi cấu trúc dữ liệu mà API cung cấp ra bên ngoài.
+
+- Bảo mật: Chỉ hiển thị những thông tin cần thiết cho client, che giấu các chi tiết triển khai của cơ sở dữ liệu.
+
+- Tối ưu hóa: Giảm lượng dữ liệu không cần thiết truyền qua mạng. Trong dự án, các DTOs được định nghĩa trong MyShop.Shared/DTOs và được phân loại rõ ràng thành Requests (ví dụ: `CreateUserRequest`, `LoginRequest`) và Responses (ví dụ: `UserInfoResponse`, `LoginResponse`).
+
+- **Ví dụ thực tiễn:**
+
+- **Request DTO** với Validation: `CreateUserRequest.cs` định nghĩa cấu trúc dữ liệu mà client phải gửi lên khi đăng ký, đồng thời chứa các quy tắc xác thực (validation rules).
+
+  ```csharp
+  // File: src/MyShop.Shared/DTOs/Requests/CreateUserRequest.cs
+
+  public class CreateUserRequest
+  {
+      [Required(ErrorMessage = "Tên đăng nhập không được để trống")]
+      [MaxLength(100, ErrorMessage = "Tên đăng nhập không được vượt quá 100 ký tự")]
+      public string Username { get; set; } = string.Empty;
+
+      [Required(ErrorMessage = "Email không được để trống")]
+      [EmailAddress(ErrorMessage = "Email không đúng định dạng")]
+      public string Email { get; set; } = string.Empty;
+      //...
+  }
+  ```
+
+- **Response DTO**: `UserInfoResponse.cs` định nghĩa các thông tin an toàn và cần thiết để trả về cho client sau khi lấy thông tin người dùng, loại bỏ các trường nhạy cảm như Password.
+
+  ```csharp
+  // File: src/MyShop.Shared/DTOs/Responses/UserInfoResponse.cs
+
+  public class UserInfoResponse
+  {
+      public Guid Id { get; set; }
+      public string Username { get; set; } = string.Empty;
+      public string Email { get; set; } = string.Empty;
+      public DateTime CreatedAt { get; set; }
+      public List<string> RoleNames { get; set; } = new List<string>();
+      //...
+  }
+  ```
 
 #### 4.2.2. Business Logic Layer
 
-- **Services:** [Mô tả]
-- **Use Cases:** [Mô tả]
-- **Domain Models:** [Mô tả]
+Đây là tầng cốt lõi, chứa đựng toàn bộ logic, quy trình và quy tắc nghiệp vụ của ứng dụng. Nó hoàn toàn không biết gì về giao diện người dùng hay cách dữ liệu được lưu trữ.
+
+**Services và Dependency Inversion**: Tầng này được tổ chức theo Service Pattern. Mỗi Service chịu trách nhiệm cho một nhóm nghiệp vụ cụ thể. Áp dụng nguyên lý Đảo ngược Phụ thuộc (Dependency Inversion) bằng cách định nghĩa các interface cho mỗi service. Điều này giúp hệ thống trở nên linh hoạt và dễ kiểm thử.
+
+- **Ví dụ thực tiễn:** `IAuthService` định nghĩa các hợp đồng cho nghiệp vụ xác thực, trong khi `AuthService` là lớp triển khai cụ thể.
+
+  _Interface định nghĩa hợp đồng:_
+
+  ```csharp
+  // File: src/MyShop.Server/Services/Interfaces/IAuthService.cs
+
+  public interface IAuthService
+  {
+      Task<CreateUserResponse> RegisterAsync(CreateUserRequest request);
+      Task<LoginResponse> LoginAsync(LoginRequest request);
+      Task<UserInfoResponse?> GetMeAsync();
+  }
+  ```
+
+  _Lớp Service triển khai nghiệp vụ và phụ thuộc vào các Abstraction của tầng DAL:_
+
+  ```csharp
+  // File: src/MyShop.Server/Services/Implementations/AuthService.cs
+
+  public class AuthService : IAuthService
+  {
+      private readonly IUserRepository _userRepository; // Phụ thuộc vào Interface, không phải lớp cụ thể
+      private readonly IJwtService _jwtService;
+      private readonly ILogger<AuthService> _logger;
+
+      public AuthService(IUserRepository userRepository, IJwtService jwtService, ...)
+      {
+          _userRepository = userRepository;
+          _jwtService = jwtService;
+          //...
+      }
+
+      public async Task<LoginResponse> LoginAsync(LoginRequest request)
+      {
+          // 1. Tìm người dùng
+          var user = await _userRepository.GetByUsernameAsync(request.UsernameOrEmail)
+                  ?? await _userRepository.GetByEmailAsync(request.UsernameOrEmail);
+
+          if (user == null) { throw new UnauthorizedAccessException(...); }
+
+          // 2. Xác thực mật khẩu
+          if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+          {
+              throw new UnauthorizedAccessException(...);
+          }
+
+          // 3. Tạo token
+          var token = await _jwtService.GenerateAccessTokenAsync(user);
+
+          // 4. Ánh xạ sang DTO và trả về
+          return new LoginResponse { /* ... */ };
+      }
+  }
+  ```
 
 #### 4.2.3. Data Access Layer
 
-- **Repositories:** [Mô tả]
-- **Database Context:** [Mô tả]
-- **Entities:** [Mô tả]
+Tầng này chịu trách nhiệm hoàn toàn về việc tương tác với cơ sở dữ liệu, bao gồm việc lưu trữ và truy xuất dữ liệu. Nó trừu tượng hóa các chi tiết về cơ sở dữ liệu khỏi tầng nghiệp vụ.
+
+**Repository Pattern**: Sử dụng mẫu thiết kế Repository để đóng gói logic truy cập dữ liệu. Mỗi Repository hoạt động như một bộ sưu tập các đối tượng trong bộ nhớ, giúp che giấu các chi tiết truy vấn của Entity Framework Core khỏi tầng BLL.
+
+- **Ví dụ thực tiễn:** `IUserRepository` và `UserRepository`.
+
+  _Interface của Repository:_
+
+  ```csharp
+  // File: src/MyShop.Data/Repositories/Interfaces/IUserRepository.cs
+
+  public interface IUserRepository
+  {
+      Task<User?> GetByIdAsync(Guid id);
+      Task<User?> GetByUsernameAsync(string username);
+      Task<User> CreateAsync(User user);
+      Task<bool> ExistsAsync(string username, string email);
+  }
+  ```
+
+  _Triển khai Repository sử dụng EF Core:_
+
+  ```csharp
+  // File: src/MyShop.Data/Repositories/UserRepository.cs
+
+  public class UserRepository : IUserRepository
+  {
+      private readonly ShopContext _context; // DbContext được inject vào
+
+      public UserRepository(ShopContext context)
+      {
+          _context = context;
+      }
+
+      public async Task<User?> GetByUsernameAsync(string username)
+      {
+          // Sử dụng LINQ để truy vấn, EF Core sẽ dịch nó thành SQL
+          return await _context.Users
+              .Include(u => u.Roles) // Tải kèm dữ liệu liên quan (eager loading)
+              .FirstOrDefaultAsync(u => u.Username == username);
+      }
+
+      //... các phương thức khác
+  }
+  ```
+
+**Database Context (ShopContext)**: Đây là trái tim của việc tương tác với CSDL bằng EF Core. ShopContext đại diện cho một phiên làm việc với cơ sở dữ liệu, cho phép truy vấn và lưu dữ liệu.
+
+- **Ví dụ thực tiễn:** Trong `ShopContext.cs` định nghĩa các `DbSet` và cấu hình các mối quan hệ.
+
+  ```csharp
+  // File: src/MyShop.Data/ShopContext.cs
+
+  public class ShopContext : DbContext
+  {
+      public DbSet<User> Users { get; set; }
+      public DbSet<Role> Roles { get; set; }
+      public DbSet<Product> Products { get; set; }
+      //...
+
+      protected override void OnModelCreating(ModelBuilder modelBuilder)
+      {
+          base.OnModelCreating(modelBuilder);
+
+          // Cấu hình quan hệ nhiều-nhiều giữa User và Role
+          modelBuilder.Entity<User>()
+              .HasMany(u => u.Roles)
+              .WithMany(r => r.Users)
+              .UsingEntity(j => j.ToTable("user_roles"));
+
+          // Thiết lập ràng buộc duy nhất (unique constraint) cho cột Username
+          modelBuilder.Entity<User>()
+              .HasIndex(u => u.Username)
+              .IsUnique();
+      }
+  }
+  ```
+
+**Entities:** Là các lớp C# thuần túy (POCO) ánh xạ trực tiếp đến các bảng trong cơ sở dữ liệu PostgreSQL. Chúng được định nghĩa trong MyShop.Data/Entities.
+
+- **Ví dụ thực tiễn:** Entity User.cs với các thuộc tính và các mối quan hệ.
+
+  ```csharp
+  // File: src/MyShop.Data/Entities/User.cs
+
+  public class User
+  {
+      public Guid Id { get; set; }
+
+      [Required]
+      [MaxLength(100)]
+      public string Username { get; set; } = string.Empty;
+
+      [Required]
+      public string Password { get; set; } = string.Empty;
+
+      // ... các thuộc tính khác
+
+      // Navigation Property để định nghĩa mối quan hệ với Role
+      public ICollection<Role> Roles { get; set; } = new List<Role>();
+  }
+  ```
 
 ### 4.3. MVVM Pattern (Frontend)
 
@@ -990,15 +1493,151 @@ Khi `IsActive` thay đổi → UI tự động cập nhật (không cần viết
 
 **Bên dưới là các mẫu pattern có thể sử dụng và nêu thêm nếu cần thiết đặt biệt là frontend cần tìm hiểu kỹ hơn về phần này, pattern này tùy vào sẽ dùng chung nên sẽ có thể lặp lại nên có thể nêu rõ là pattern nào được làm chung**
 
+Việc lựa chọn và áp dụng các mẫu thiết kế phù hợp là yếu tố then chốt để xây dựng một hệ thống phần mềm có cấu trúc tốt, dễ bảo trì và mở rộng. Trong dự án này, nhóm đã chủ động tích hợp một số mẫu thiết kế kinh điển và hiệu quả.
+
 ### 5.1. Repository Pattern (Backend)
 
 **[PHÂN CÔNG: BACKEND DEVELOPER]**
 
-- **Mục đích:** [Mô tả]
-- **Implementation:** [Code example]
-- **Lợi ích:** [Mô tả]
+- **Mục đích:** Tạo một lớp trừu tượng (abstraction layer) giữa tầng Business Logic và tầng Data Access. Repository Pattern đóng gói logic truy cập dữ liệu, cung cấp một giao diện giống như một bộ sưu tập các đối tượng trong bộ nhớ, giúp che giấu các chi tiết kỹ thuật của việc truy vấn cơ sở dữ liệu.
 
-### 5.2. Command Pattern (Frontend)
+- **Implementation:**
+
+  - Mỗi entity chính trong miền dữ liệu (User, Role, Profile) đều có một cặp Interface và Repository tương ứng.
+
+```mermaid
+classDiagram
+    direction LR
+    class IAuthService {
+        <<interface>>
+        +LoginAsync(request)
+    }
+    class AuthService {
+        -IUserRepository userRepository
+        +LoginAsync(request)
+    }
+    class IUserRepository {
+        <<interface>>
+        +GetByUsernameAsync(username)
+    }
+    class UserRepository {
+        -ShopContext context
+        +GetByUsernameAsync(username)
+    }
+    IAuthService <|.. AuthService
+    AuthService o-- IUserRepository
+    IUserRepository <|.. UserRepository
+```
+
+- Tầng Business Logic (AuthService) chỉ cần biết về sự tồn tại của `IUserRepository` và các phương thức của nó. Nó không cần quan tâm liệu dữ liệu được lấy từ PostgreSQL, SQL Server hay một file JSON.
+
+```csharp
+// File: src/MyShop.Server/Services/Implementations/AuthService.cs
+public async Task<LoginResponse> LoginAsync(LoginRequest request)
+{
+    // AuthService chỉ gọi phương thức từ interface
+    var user = await _userRepository.GetByUsernameAsync(request.UsernameOrEmail);
+    // ...
+}
+```
+
+- Trong khi đó, UserRepository là nơi thực sự triển khai logic truy vấn bằng Entity Framework Core.
+
+```csharp
+// File: src/MyShop.Data/Repositories/UserRepository.cs
+public async Task<User?> GetByUsernameAsync(string username)
+{
+    // Chi tiết triển khai bằng EF Core được đóng gói tại đây
+    return await _context.Users
+        .Include(u => u.Roles)
+        .FirstOrDefaultAsync(u => u.Username == username);
+}
+```
+
+- **Lợi ích:**
+
+  - Tách biệt mối quan tâm: Logic nghiệp vụ và logic truy cập dữ liệu được tách bạch.
+
+  - Tập trung hóa logic truy vấn: Giúp dễ dàng quản lý, tối ưu hóa và tránh trùng lặp mã truy vấn.
+
+  - Tăng khả năng kiểm thử: Cho phép unit test các Service mà không cần kết nối đến cơ sở dữ liệu thực.
+
+### 5.2. Service Registry Pattern (Thông qua DI Container) (Backend)
+
+Dự án không triển khai mẫu Registry cổ điển mà thay vào đó, tận dụng Dependency Injection (DI) Container có sẵn của ASP.NET Core như một Service Registry hiện đại và mạnh mẽ. Đây là một cách tiếp cận tiên tiến, giúp quản lý các thành phần của hệ thống một cách linh hoạt và có tổ chức.
+
+- **Mục dích:**
+
+  - Tập trung hóa việc quản lý phụ thuộc: Cung cấp một nơi duy nhất (Program.cs) để "đăng ký" và cấu hình tất cả các dịch vụ, repository, và các thành phần khác trong ứng dụng. Điều này giúp hệ thống có một cái nhìn tổng quan rõ ràng về kiến trúc và các mối quan hệ.
+
+  - Giảm sự kết dính (Decoupling): Tách biệt các lớp khỏi việc phải tự tạo ra các đối tượng phụ thuộc của chúng. Các lớp chỉ cần biết về interface (hợp đồng) mà chúng cần, chứ không cần biết về lớp triển khai cụ thể.
+
+  - Thúc đẩy nguyên tắc Đảo ngược Điều khiển (Inversion of Control - IoC): Chuyển giao trách nhiệm tạo và quản lý vòng đời của các đối tượng từ các lớp riêng lẻ cho một thực thể trung tâm (DI Container), giúp mã nguồn trở nên sạch sẽ và dễ quản lý hơn.
+
+- **Implementation:** Quá trình cài đặt và sử dụng được chia thành hai giai đoạn chính: Đăng ký (Registration) và Phân giải (Resolution).
+
+  - **Đăng ký Dịch vụ (Service Registration)**: khai báo tất cả các "cặp" interface và implementation trong file Program.cs. Đây chính là quá trình xây dựng "sổ đăng ký" cho toàn bộ ứng dụng.
+
+  ```csharp
+  // File: src/MyShop.Server/Program.cs
+
+  var builder = WebApplication.CreateBuilder(args);
+
+  // ...
+
+  // Đăng ký các Repository với vòng đời Scoped
+  builder.Services.AddScoped<IUserRepository, UserRepository>(); //
+  builder.Services.AddScoped<IRoleRepository, RoleRepository>(); //
+
+  // Đăng ký các Service
+  builder.Services.AddScoped<IAuthService, AuthService>(); //
+  builder.Services.AddScoped<IJwtService, JwtService>(); //
+  builder.Services.AddScoped<ICurrentUserService, CurrentUserService>(); //
+
+  // ...
+  ```
+
+  _Bằng cách này, DI container đã biết rằng khi một thành phần nào đó cần đến IUserRepository, nó sẽ phải cung cấp một thể hiện của lớp UserRepository._
+
+  - **Phân giải Phụ thuộc qua Constructor Injection**: Thay vì các lớp phải chủ động truy vấn registry, chúng chỉ cần khai báo các phụ thuộc trong hàm khởi tạo. DI container sẽ tự động "tiêm" các thể hiện cần thiết vào.
+
+  ```csharp
+  // File: src/MyShop.Server/Controllers/AuthController.cs
+
+  public class AuthController : ControllerBase
+  {
+      private readonly IAuthService _authService;
+
+      // DI Container sẽ tự động tìm và "tiêm" một instance của AuthService vào đây
+      public AuthController(IAuthService authService, ILogger<AuthController> logger) //
+      {
+          _authService = authService;
+          // ...
+      }
+
+      [HttpPost("login")]
+      public async Task<ActionResult<ApiResponse<LoginResponse>>> Login([FromBody] LoginRequest request)
+      {
+          // Sử dụng service đã được tiêm vào
+          var response = await _authService.LoginAsync(request); //
+          return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Login successful", 200)); //
+      }
+  }
+  ```
+
+  _Quá trình này diễn ra theo một chuỗi: AuthController cần IAuthService, AuthService lại cần IUserRepository và IJwtService, và DI container sẽ phân giải tất cả các phụ thuộc này một cách đệ quy để tạo ra đối tượng hoàn chỉnh._
+
+- **Lợi ích:**
+
+  - **Mã nguồn sạch và dễ bảo trì**: Các lớp trở nên gọn gàng hơn vì chúng không còn chứa logic khởi tạo các đối tượng phụ thuộc. Các mối quan hệ giữa các thành phần được thể hiện rõ ràng qua các hàm khởi tạo.
+
+  - **Tăng cường khả năng kiểm thử (Testability)**: Đây là một trong những lợi ích quan trọng nhất. Khi viết unit test cho `AuthController`, chúng ta có thể dễ dàng tạo ra một phiên bản giả (mock) của `IAuthService` và truyền vào, cho phép kiểm tra logic của Controller một cách hoàn toàn độc lập mà không bị ảnh hưởng bởi logic phức tạp bên trong `AuthService` thật.
+
+  - **Linh hoạt và dễ dàng thay thế**: Nếu trong tương lai, chúng tôi muốn thay đổi cách băm mật khẩu hoặc cách tạo token, chúng tôi chỉ cần tạo một lớp triển khai mới cho IJwtService và thay đổi một dòng duy nhất trong Program.cs. Toàn bộ phần còn lại của hệ thống không cần chỉnh sửa.
+
+  - **Quản lý vòng đời hiệu quả**: DI container tự động quản lý việc tạo và hủy các đối tượng theo vòng đời đã được cấu hình (Scoped, Singleton, Transient), giúp tối ưu hóa việc sử dụng tài nguyên và tránh các vấn đề về rò rỉ bộ nhớ.
+
+### 5.3. Command Pattern (Frontend)
 
 **[PHÂN CÔNG: FRONTEND DEVELOPER]**
 
@@ -1096,7 +1735,7 @@ public partial class ProductsViewModel : ObservableObject
 
 ---
 
-### 5.3. Observer Pattern (Frontend)
+### 5.4. Observer Pattern (Frontend)
 
 **[PHÂN CÔNG: FRONTEND DEVELOPER]**
 
@@ -1205,7 +1844,7 @@ Products[0].Stock--;
 
 ---
 
-### 5.4. Factory Pattern _(Frontend: dùng trong tạo ViewModel hoặc Dialog)_
+### 5.5. Factory Pattern _(Frontend: dùng trong tạo ViewModel hoặc Dialog)_
 
 **Mục đích:**
 Tạo ra các đối tượng (ViewModel, Dialog, hoặc API service) mà không cần lộ cách khởi tạo cụ thể.
@@ -1248,7 +1887,7 @@ public class ViewModelFactory : IViewModelFactory
 
 ---
 
-### 5.5. Dependency Injection Pattern (Frontend: WinUI + Refit Services)
+### 5.6. Dependency Injection Pattern (Frontend: WinUI + Refit Services)
 
 **Mục đích:**
 Cung cấp dependency (như `ApiClient`, `NavigationService`, `DialogService`) cho các ViewModel mà **không cần khởi tạo trực tiếp**.
@@ -1288,7 +1927,7 @@ public partial class App : Application
 
 ---
 
-### 5.6. State Pattern _(Frontend: cho Login, Role, Theme, hoặc Navigation State)_
+### 5.7. State Pattern _(Frontend: cho Login, Role, Theme, hoặc Navigation State)_
 
 **Mục đích:**
 Cho phép hệ thống **thay đổi hành vi động** khi trạng thái ứng dụng thay đổi (user login/logout, role đổi, theme đổi).
@@ -1330,7 +1969,7 @@ public class AuthenticatedState : UserState
 
 ---
 
-### 5.7. Template Method Pattern _(Frontend: trong BaseViewModel và BasePage)_
+### 5.8. Template Method Pattern _(Frontend: trong BaseViewModel và BasePage)_
 
 **Mục đích:**
 Định nghĩa khung xử lý chung cho các ViewModel, cho phép subclass override từng bước cụ thể.
@@ -1368,7 +2007,7 @@ public class ProductsViewModel : BaseViewModel
 
 ---
 
-### 5.8. Adapter Pattern _(Frontend: trong API Layer – Refit mapping)_
+### 5.9. Adapter Pattern _(Frontend: trong API Layer – Refit mapping)_
 
 **Mục đích:**
 Chuyển đổi dữ liệu từ tầng API (DTO) sang Model nội bộ của ViewModel mà không làm thay đổi logic gọi API.
@@ -1407,7 +2046,7 @@ public class ProductAdapter
 
 ---
 
-### 5.9. Strategy Pattern (AI)
+### 5.10. Strategy Pattern (AI)
 
 **[PHÂN CÔNG: AI DEVELOPER]**
 
@@ -1476,8 +2115,6 @@ public class ProductAdapter
   - Sự tin cậy: có fallback khi API chính lỗi hoặc không sẵn sàng.
   - Tách biệt: client-side Strategy quản lý gọi API; server-side mỗi model có endpoint rõ ràng.
 
-### 5.10. [Registry Pattern]
-
 ---
 
 ## 6. ĐẢM BẢO CHẤT LƯỢNG
@@ -1486,38 +2123,197 @@ public class ProductAdapter
 
 ### 6.1. Coding Conventions
 
-#### 6.1.1. C# Conventions (Backend + Frontend)
+#### 6.1.1. Naming Conventions (Backend)
 
-**[PHÂN CÔNG: BACKEND + FRONTEND]**
+**[PHÂN CÔNG: BACKEND]**
 
 Tham khảo: [Microsoft C# Identifier Conventions](https://learn.microsoft.com/vi-vn/dotnet/csharp/fundamentals/coding-style/identifier-names)
 
-- **Naming Conventions:**
+Việc đặt tên nhất quán là yếu tố cơ bản nhất để tạo ra mã nguồn dễ hiểu. Nhóm tuân theo các quy ước đặt tên chuẩn của Microsoft cho ngôn ngữ C#.
 
-  ```csharp
-  // Classes - PascalCase
-  public class ProductService { }
+- **Projects và Namespaces**: Sử dụng định dạng `PascalCase`. Tên namespace phải phản ánh cấu trúc thư mục của dự án.
 
-  // Methods - PascalCase
-  public void GetAllProducts() { }
+  - Ví dụ: Tên project `MyShop.Server`, `MyShop.Data`. Namespace `MyShop.Server.Services.Implementations`.
 
-  // Properties - PascalCase
-  public string ProductName { get; set; }
+- **Classes, Interfaces, Enums, Records**: Sử dụng định dạng `PascalCase`. Riêng đối với interface, luôn có tiền tố `I`.
 
-  // Fields - camelCase with underscore
-  private readonly IProductRepository _productRepository;
+  - Ví dụ:
 
-  // Parameters - camelCase
-  public void CreateProduct(string productName) { }
+    - Class: `public class AuthService : IAuthService`
 
-  // Constants - PascalCase
-  public const int MaxRetryCount = 3;
-  ```
+    - Interface: `public interface IUserRepository`
 
-- **WinUI Specific Conventions:**
-  [Frontend Developer điền thêm]
+    - DTO: `public class CreateUserRequest`
 
-#### 6.1.2. Python Conventions (AI)
+- **Phương thức (Methods)**: Sử dụng định dạng `PascalCase`. Đối với các phương thức bất đồng bộ (asynchronous), luôn phải có hậu tố `Async` để dễ phân biệt.
+
+  - Ví dụ:
+
+    - `public async Task<LoginResponse> LoginAsync(LoginRequest request)`
+
+    - `private async Task<string> ReadAndProcessTemplateAsync(...)`
+
+- **Thuộc tính (Properties) và trường công khai (Public Fields)**: Sử dụng định dạng `PascalCase`.
+
+  - Ví dụ: `public string Username { get; set; }` trong lớp `User`.
+
+- **Trường riêng tư (Private Fields)**: Sử dụng định dạng `_camelCase` (có tiền tố gạch dưới \_). Điều này giúp phân biệt rõ ràng giữa biến cục bộ và trường của lớp.
+
+  - Ví dụ: Trong lớp `AuthService`, các trường private được khai báo như sau:
+
+    ```csharp
+    // File: src/MyShop.Server/Services/Implementations/AuthService.cs
+    public class AuthService : IAuthService
+    {
+        private readonly IUserRepository _userRepository;
+        private readonly IJwtService _jwtService;
+        private readonly ILogger<AuthService> _logger;
+        //...
+    }
+    ```
+
+- **Biến cục bộ (Local Variables) và Tham số phương thức (Parameters)**: Sử dụng định dạng `camelCase`.
+
+  - Ví dụ:
+
+    ```csharp
+    // File: src/MyShop.Server/Services/Implementations/JwtService.cs
+    public async Task<string> GenerateAccessTokenAsync(User user) // 'user' là parameter
+    {
+        var claims = new List<Claim> { ... }; // 'claims' là biến cục bộ
+        var key = new SymmetricSecurityKey(...); // 'key' là biến cục bộ
+        // ...
+    }
+    ```
+
+#### 6.1.2. Định Dạng và Phong Cách Mã (Formatting & Style)
+
+- **Dấu ngoặc nhọn `{}`**: Sử dụng phong cách _Allman_, tức là dấu ngoặc nhọn mở luôn được đặt trên một dòng mới. Điều này giúp tăng cường tính rõ ràng của các khối mã.
+
+  - Ví dụ:
+
+    ```csharp
+    // File: src/MyShop.Server/Controllers/AuthController.cs
+    public class AuthController : ControllerBase
+    {
+        [HttpPost("register")]
+        public async Task<ActionResult<ApiResponse<CreateUserResponse>>> Register([FromBody] CreateUserRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                // ...
+            }
+            // ...
+        }
+    }
+    ```
+
+- **Thụt lề (Indentation)**: Sử dụng **4 spaces** cho mỗi cấp thụt lề, giúp mã nguồn rõ ràng & dễ debug.
+
+- **Từ khóa `var`**: Khuyến khích sử dụng từ khóa `var` khi kiểu dữ liệu của biến có thể được suy ra một cách rõ ràng từ vế phải của phép gán. Điều này giúp mã nguồn ngắn gọn hơn mà không làm mất đi tính dễ đọc.
+
+  - Ví dụ:
+
+    ```csharp
+    // Rõ ràng 'key' là một SymmetricSecurityKey
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+
+    // Rõ ràng 'roles' là một List<Role>
+    var roles = new List<Role>();
+    ```
+
+- **Khai báo `using`**: Tất cả các khai báo `using` phải được đặt ở đầu file, bên ngoài `namespace`.
+
+#### 6.1.3. Quy Ước về Kiến Trúc
+
+- **Lập trình bất đồng bộ (`async/await`)**: Mọi thao tác I/O-bound (như truy vấn cơ sở dữ liệu, gọi API bên ngoài, đọc/ghi file) bắt buộc phải được triển khai bất đồng bộ bằng `async` và `await`. Điều này giúp giải phóng luồng xử lý (thread) trong khi chờ đợi tác vụ hoàn thành, tăng khả năng đáp ứng và mở rộng của máy chủ.
+
+  - Ví dụ: Phương thức `GetByUsernameAsync` trong `UserRepository` minh họa rõ ràng quy ước này.
+
+    ```csharp
+    // File: src/MyShop.Data/Repositories/UserRepository.cs
+    public async Task<User?> GetByUsernameAsync(string username)
+    {
+        return await _context.Users
+            .Include(u => u.Roles)
+            .FirstOrDefaultAsync(u => u.Username == username);
+    }
+    ```
+
+- **Cấu trúc Phản hồi API (API Response Structure)**: Mọi endpoint trong Controller đều phải trả về đối tượng `ApiResponse<T>`. Điều này đảm bảo rằng tất cả các phản hồi từ API đều có một cấu trúc nhất quán, giúp phía client dễ dàng xử lý kết quả (thành công hoặc thất bại) một cách đồng bộ.
+
+  - Ví dụ:
+
+    ```csharp
+    // File: src/MyShop.Server/Controllers/RoleController.cs
+    [HttpGet]
+    public async Task<ActionResult<ApiResponse<IEnumerable<RoleResponse>>>> GetRoles()
+    {
+        var roles = await _roleService.GetAllRolesAsync();
+
+        // Luôn trả về cấu trúc ApiResponse chuẩn
+        return Ok(ApiResponse<IEnumerable<RoleResponse>>.SuccessResponse(roles, ...));
+    }
+    ```
+
+- **Xử lý Lỗi và Ghi Log (Error Handling & Logging):**
+
+  - **Exception Handling**: Sử dụng các khối `try-catch` ở các tầng ngoài cùng của logic (thường là trong Controller hoặc Service) để bắt và xử lý các ngoại lệ. Điều này ngăn chặn việc rò rỉ các thông tin nhạy cảm (như stack trace) ra client và cho phép trả về một thông báo lỗi thân thiện.
+
+  - **Logging**: Sử dụng `ILogger` được cung cấp bởi ASP.NET Core để ghi lại các sự kiện quan trọng, cảnh báo, và lỗi. Việc ghi log có cấu trúc (structured logging) được áp dụng để dễ dàng truy vấn và phân tích sau này. Ví dụ: Trong `AuthService`, các thông tin về yêu cầu, thành công, hay thất bại đều được ghi lại.
+
+    ```csharp
+    // File: src/MyShop.Server/Services/Implementations/AuthService.cs
+    public async Task<LoginResponse> LoginAsync(LoginRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("✅ Login request received for: {UsernameOrEmail}", request.UsernameOrEmail);
+
+            // ...
+            if (user == null)
+            {
+                _logger.LogWarning("⚠️ Login failed - User not found: {UsernameOrEmail}", request.UsernameOrEmail);
+                throw new UnauthorizedAccessException(...);
+            }
+            // ...
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error during user login for {UsernameOrEmail}", request.UsernameOrEmail);
+            throw;
+        }
+    }
+    ```
+
+#### 6.1.4. Quy Tắc về Tài Liệu Hóa Mã (Documentation)
+
+- **XML Documentation Comments**: Mọi `public class`, `interface`, `method`, và `property` đều phải được tài liệu hóa bằng cách sử dụng comment XML (`///`). Điều này không chỉ giúp các thành viên trong nhóm hiểu rõ mục đích của từng thành phần mà còn được tích hợp vào IntelliSense của Visual Studio và có thể được sử dụng để tự động tạo tài liệu API.
+
+  - Ví dụ:
+
+    ```csharp
+    // File: src/MyShop.Server/Services/Interfaces/IUserAuthorityService.cs
+
+    /// <summary>
+    /// Interface cho service quản lý quyền hạn của user.
+    /// </summary>
+    public interface IUserAuthorityService
+    {
+        /// <summary>
+        /// Lấy danh sách quyền hạn hiệu lực của user (sau khi trừ đi quyền bị loại bỏ).
+        /// </summary>
+        /// <param name="userId">ID của user</param>
+        /// <returns>Danh sách tên quyền hạn hiệu lực</returns>
+        Task<IEnumerable<string>> GetEffectiveAuthoritiesAsync(Guid userId);
+    }
+    ```
+
+#### 6.1.5. WinUI Specific Conventions:
+
+[Frontend Developer điền thêm]
+
+#### 6.1.6. Python Conventions (AI)
 
 **[PHÂN CÔNG: AI DEVELOPER]**
 
@@ -1626,19 +2422,58 @@ Việc test được thực hiện trực tiếp trên ứng dụng WinUI 3 buil
 
 **[PHÂN CÔNG: BACKEND DEVELOPER]**
 
-- **Testing Framework:** [xUnit/NUnit/MSTest]
-- **Test Structure:**
-  ```csharp
-  // Arrange - Act - Assert pattern
-  [Test]
-  public void CreateProduct_ValidInput_ReturnsSuccess()
-  {
-      // Arrange
-      // Act
-      // Assert
-  }
-  ```
-- **Coverage Target:** [Phần trăm coverage mục tiêu]
+Để đảm bảo chất lượng, sự ổn định và độ tin cậy của hệ thống, dự án đã xây dựng và áp dụng một chiến lược kiểm thử đơn vị (Unit Testing) bài bản cho tầng backend. Mục tiêu của Unit Test là xác minh rằng mỗi "đơn vị" (unit) mã nguồn riêng lẻ—thường là một phương thức trong một lớp—hoạt động đúng như mong đợi trong một môi trường bị cô lập.
+
+---
+
+##### **6.2.2.1. Mục Tiêu và Tầm Quan Trọng**
+
+- **Đảm bảo tính đúng đắn:** Xác minh rằng logic nghiệp vụ trong các service hoạt động chính xác theo từng trường hợp sử dụng (use case), bao gồm cả các kịch bản thành công, thất bại và các trường hợp biên (edge cases).
+- **Phát hiện sớm lỗi (Regression Prevention):** Khi có sự thay đổi hoặc bổ sung mã nguồn mới, việc chạy lại bộ unit test giúp nhanh chóng phát hiện các lỗi hồi quy (regression bugs)—những lỗi phát sinh ở chức năng cũ do sự thay đổi mới.
+- **Hỗ trợ tái cấu trúc (Refactoring):** Cung cấp một "lưới an toàn", cho phép lập trình viên tự tin tái cấu trúc hoặc tối ưu hóa mã nguồn mà không sợ làm hỏng các chức năng hiện có.
+- **Tài liệu sống (Living Documentation):** Các unit test tự nó đã là một dạng tài liệu kỹ thuật. Bằng cách đọc các test case, một lập trình viên mới có thể hiểu rõ các yêu cầu và hành vi mong đợi của một phương thức mà không cần đọc mã nguồn triển khai chi tiết.
+
+---
+
+##### **6.2.2.2. Công Cụ và Nền Tảng**
+
+Dự án sử dụng bộ công cụ tiêu chuẩn và phổ biến trong hệ sinh thái .NET để triển khai unit test:
+
+- **xUnit:** Là một framework kiểm thử mã nguồn mở, miễn phí và hướng cộng đồng cho .NET. **xUnit** có cú pháp hiện đại, rõ ràng và khả năng chạy song song các test case, giúp tăng tốc quá trình kiểm thử.
+- **Moq:** Là một thư viện "mocking" (tạo đối tượng giả) mạnh mẽ và linh hoạt. Moq cho phép tạo ra các phiên bản giả của các đối tượng phụ thuộc (dependencies), ví dụ như các repository. Điều này là tối quan trọng để cô lập đơn vị đang được kiểm thử.
+- **Microsoft.NET.Test.Sdk:** Cung cấp hạ tầng cần thiết để Visual Studio và các công cụ dòng lệnh có thể phát hiện và thực thi các bài kiểm thử.
+
+---
+
+##### **6.2.2.3. Phương Pháp Tiếp Cận: Mẫu Arrange-Act-Assert (AAA)**
+
+Tất cả các unit test trong dự án đều tuân thủ nghiêm ngặt theo mẫu **Arrange-Act-Assert (AAA)**. Cấu trúc này giúp các bài kiểm thử trở nên nhất quán, dễ đọc và dễ hiểu.
+
+- **Arrange (Sắp đặt):** Giai đoạn này chuẩn bị mọi thứ cần thiết cho bài kiểm thử. Bao gồm:
+
+  - Khởi tạo đối tượng đang được kiểm thử (System Under Test - SUT).
+  - Tạo các đối tượng giả (mocks) cho các phụ thuộc của SUT.
+  - Thiết lập hành vi cho các mocks (ví dụ: "khi phương thức `GetByUsernameAsync` được gọi với username 'test', hãy trả về một đối tượng `User` cụ thể").
+
+- **Act (Hành động):** Giai đoạn này thực thi phương thức cần kiểm thử với các tham số đã được chuẩn bị ở bước Arrange. Đây là hành động duy nhất được thực hiện trong một test case.
+
+- **Assert (Xác minh):** Giai đoạn cuối cùng, giúp kiểm tra xem kết quả của hành động ở bước Act có khớp với kết quả mong đợi hay không.
+
+---
+
+##### **6.2.2.4. Lợi Ích và Định Hướng Tương Lai**
+
+- **Lợi ích đã đạt được**:
+
+  - **Tăng độ tin cậy**: Các logic nghiệp vụ cốt lõi như đăng nhập, đăng ký hoạt động đúng như thiết kế.
+
+  - **Giảm thời gian gỡ lỗi**: Lỗi được phát hiện ngay ở giai đoạn phát triển, giúp giảm đáng kể thời gian và chi phí cho việc gỡ lỗi sau này.
+
+  - **Định hướng tương lai**:
+
+    - **Tăng độ bao phủ (Test Coverage)**: Tiếp tục viết unit test cho các service còn lại và các kịch bản phức tạp hơn.
+
+    - **Tích hợp vào CI/CD**: Tự động hóa việc chạy toàn bộ bộ test trong quy trình Tích hợp liên tục/Triển khai liên tục (CI/CD). Bất kỳ thay đổi nào làm hỏng test sẽ bị từ chối, đảm bảo chất lượng mã nguồn trên nhánh chính luôn ở mức cao nhất.
 
 #### 6.2.3. AI Model Testing (AI)
 
@@ -1954,16 +2789,243 @@ Việc test được thực hiện trực tiếp trên ứng dụng WinUI 3 buil
 
 ---
 
-### 7.3. [Tính năng nâng cao 3 - Backend]
+### 7.3. Xây Dựng Hệ Thống Identity User (Backend)
 
-**[PHÂN CÔNG: BACKEND DEVELOPER]**
+**Mục tiêu:** Thay vì sử dụng giải pháp có sẵn như **ASP.NET Core Identity**, nhóm quyết định tự xây dựng hệ thống quản lý **User** (Người dùng), **Role** (Vai trò), và **Authority** (Quyền hạn) từ đầu. Mục tiêu chính là để có được **toàn quyền kiểm soát (full control)** đối với lược đồ cơ sở dữ liệu và logic nghiệp vụ, giúp hệ thống linh hoạt và tối ưu hơn cho các yêu cầu đặc thù của dự án.
 
-- **Mô tả:** [Chi tiết tính năng]
-- **Công nghệ sử dụng:** [Công nghệ không được dạy trên lớp]
-- **Implementation:** [Cách triển khai]
-- **Lợi ích:** [Giá trị mang lại]
+**Cài đặt:**
+Kiến trúc này được triển khai nhất quán theo mô hình 3 lớp:
 
-### 7.4. Weekly Sales Forecast
+1.  **Tầng Data Access:**
+
+    - **Entities:** Định nghĩa các lớp `User`, `Role`, `Authority`, `RoleAuthorities`, và `RemovedAuthorities` trong `MyShop.Data/Entities`. Các lớp này cho phép tùy chỉnh mọi thuộc tính (ví dụ: `IsTrialActive` trong `User`) và các mối quan hệ phức tạp, như quan hệ nhiều-nhiều giữa User-Role và Role-Authority.
+      ```csharp
+      // File: src/MyShop.Data/Entities/User.cs
+      public class User
+      {
+          public Guid Id { get; set; }
+          public string Username { get; set; } = string.Empty;
+          public string Password { get; set; } = string.Empty; // Mật khẩu được băm
+          public bool IsTrialActive { get; set; } = false;
+          // Navigation property
+          public ICollection<Role> Roles { get; set; } = new List<Role>();
+      }
+      ```
+    - **Repository Pattern:** Các repository như `UserRepository` và `RoleRepository` đóng gói hoàn toàn logic truy vấn cơ sở dữ liệu bằng Entity Framework Core, cung cấp các phương thức tường minh như `GetByUsernameAsync`, `ExistsAsync`.
+
+2.  **Tầng Business Logic:**
+
+    - **Service Layer:** Lớp `AuthService` chứa logic nghiệp vụ chính. Ví dụ, trong phương thức `RegisterAsync`, thay vì gọi các phương thức của Identity, ta thực hiện thủ công các bước: kiểm tra sự tồn tại của người dùng, băm mật khẩu bằng `BCrypt.Net`, và gán vai trò mặc định.
+
+      ```csharp
+      // File: src/MyShop.Server/Services/Implementations/AuthService.cs
+      public async Task<CreateUserResponse> RegisterAsync(CreateUserRequest request)
+      {
+          // 1. Kiểm tra người dùng đã tồn tại chưa
+          if (await _userRepository.ExistsAsync(request.Username, request.Email))
+          {
+              throw new InvalidOperationException("Username or email already exists");
+          }
+
+          // 2. Lấy vai trò mặc định
+          var defaultRole = await _roleRepository.GetByNameAsync("User");
+          // ...
+
+          // 3. Tạo đối tượng User và băm mật khẩu
+          var user = new User
+          {
+              Username = request.Username,
+              Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
+              Email = request.Email,
+              Roles = new List<Role> { defaultRole }
+          };
+
+          // 4. Lưu vào CSDL thông qua repository
+          var createdUser = await _userRepository.CreateAsync(user);
+          // ...
+      }
+      ```
+
+3.  **Tầng Presentation:**
+    - `AuthController` đóng vai trò là điểm cuối API, tiếp nhận các DTOs và gọi đến `AuthService`.
+
+**Lợi ích:**
+
+- **Toàn quyền kiểm soát Schema:** Chúng tôi có thể tự do thêm, bớt, hoặc sửa đổi các cột trong bảng `Users`, `Roles` mà không bị ràng buộc bởi cấu trúc của **ASP.NET Core Identity**.
+- **Logic nghiệp vụ linh hoạt:** Cho phép triển khai các logic phức tạp như quản lý quyền hạn chi tiết (authorities), cơ chế "blacklist" quyền (`RemovedAuthorities`), và các trạng thái người dùng tùy chỉnh (`IsTrialActive`).
+- **Tối ưu hóa hiệu năng:** Chỉ truy vấn những dữ liệu thực sự cần thiết, tránh được overhead từ các tính năng không sử dụng của một framework lớn như Identity.
+- **Tăng cường kiến thức nền tảng:** Việc tự xây dựng giúp đội ngũ hiểu sâu hơn về cách hoạt động của một hệ thống xác thực và phân quyền hiện đại.
+
+### 7.4. `ICurrentUserService`: Tách Biệt Logic Lấy Thông Tin Người Dùng Hiện Tại (Backend)
+
+**Mục tiêu:** Trong nhiều nghiệp vụ, chúng ta cần truy cập thông tin của người dùng đang thực hiện yêu cầu (ví dụ: ID, username). Một cách tiếp cận phổ biến là inject `IHttpContextAccessor` vào mỗi service và tự phân tích `ClaimsPrincipal`. Tuy nhiên, cách làm này dẫn đến trùng lặp mã và làm cho các service phụ thuộc vào một thành phần của tầng web (`HttpContext`).
+
+Để giải quyết vấn đề này, nhóm đã tạo ra `ICurrentUserService`—một service chuyên biệt tuân thủ **nguyên tắc Tách biệt Mối quan tâm (Separation of Concerns)**.
+
+**Cài đặt:**
+
+1.  **Interface (`ICurrentUserService`):** Định nghĩa một hợp đồng đơn giản để lấy các thông tin cần thiết của người dùng hiện tại.
+    ```csharp
+    // File: src/MyShop.Server/Services/Interfaces/ICurrentUserService.cs
+    public interface ICurrentUserService
+    {
+        Guid? UserId { get; }
+        string? Username { get; }
+        string? Email { get; }
+    }
+    ```
+2.  **Implementation (`CurrentUserService`):** Lớp này chứa toàn bộ logic phức tạp của việc tương tác với `IHttpContextAccessor` và trích xuất thông tin từ các `Claim` trong JWT token. Nó cũng xử lý các trường hợp khác nhau của tên claim do cấu hình `MapInboundClaims`.
+
+    ```csharp
+    // File: src/MyShop.Server/Services/Implementations/CurrentUserService.cs
+    public class CurrentUserService : ICurrentUserService
+    {
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        public Guid? UserId
+        {
+            get
+            {
+                // Logic phức tạp để thử nhiều loại claim khác nhau được đóng gói tại đây
+                var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                               ?? _httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
+                               ?? _httpContextAccessor.HttpContext?.User.FindFirst("nameid")?.Value;
+
+                return Guid.TryParse(userIdClaim, out var id) ? id : null;
+            }
+        }
+        // ... các thuộc tính khác
+    }
+    ```
+
+3.  **Sử dụng:** Bất kỳ service nào cần thông tin người dùng hiện tại chỉ cần inject `ICurrentUserService` một cách gọn gàng.
+
+    ```csharp
+    // File: src/MyShop.Server/Services/Implementations/UserService.cs
+    public class UserService : IUserService
+    {
+        private readonly ICurrentUserService _currentUser;
+        // ...
+
+        public UserService(ICurrentUserService currentUserService, ...)
+        {
+            _currentUser = currentUserService;
+        }
+
+        public async Task<ActivateUserResponse> ActivateUserAsync(string activateCode)
+        {
+            var userId = _currentUser.UserId; // Sử dụng một cách đơn giản và rõ ràng
+
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("Invalid JWT: userId claim is missing.");
+            }
+            // ...
+        }
+    }
+    ```
+
+**Lợi ích:**
+
+- **Mã nguồn sạch hơn:** Loại bỏ việc lặp lại logic trích xuất claim ở nhiều nơi.
+- **Tách biệt mối quan tâm:** Logic nghiệp vụ (`UserService`) không còn phụ thuộc trực tiếp vào `HttpContext`, giúp nó độc lập hơn với tầng web.
+- **Dễ kiểm thử:** Khi unit test `UserService`, chúng ta có thể dễ dàng mock `ICurrentUserService` để giả lập một người dùng đang đăng nhập mà không cần phải mock cả `HttpContext` phức tạp.
+
+### 7.5. Hệ Thống Xác Thực Email Bằng Token Bảo Mật
+
+**Mục tiêu:** Xây dựng một quy trình xác thực email an toàn, đảm bảo chỉ chủ sở hữu thực sự của địa chỉ email mới có thể kích hoạt tài khoản. Hệ thống sử dụng token dựa trên JWT, có thời hạn và mục đích sử dụng rõ ràng.
+
+**Cài đặt:**
+Quy trình được chia thành 3 bước chính, được điều phối bởi `EmailVerificationService`:
+
+1.  **Tạo Token và Gửi Email:**
+    Khi người dùng yêu cầu xác thực, `EmailVerificationService` sẽ:
+
+    - Tạo một **JWT token đặc biệt** chỉ dành cho mục đích xác thực email. Token này chứa các claim quan trọng: `userId`, `purpose: "email_verification"`, và thời gian hết hạn (ví dụ: 24 giờ). Việc ký token bằng `SecretKey` của ứng dụng đảm bảo tính toàn vẹn và chống giả mạo.
+      ```csharp
+      // File: src/MyShop.Server/Services/Implementations/EmailVerificationService.cs
+      public string GenerateVerificationToken(Guid userId)
+      {
+          var tokenDescriptor = new SecurityTokenDescriptor
+          {
+              Subject = new ClaimsIdentity(new[]
+              {
+                  new Claim("userId", userId.ToString()),
+                  new Claim("purpose", "email_verification"), // Ngăn token bị dùng cho mục đích khác
+              }),
+              Expires = DateTime.UtcNow.AddHours(TokenExpirationHours),
+              // ... ký token
+          };
+          // ...
+      }
+      ```
+    - Tạo một URL xác thực duy nhất chứa token này.
+    - Sử dụng `IEmailNotificationService` để gửi email tới người dùng. Email chứa URL này dưới dạng một liên kết có thể nhấp vào.
+
+2.  **Xử Lý Yêu Cầu Xác Thực:**
+
+    - Khi người dùng nhấp vào liên kết trong email, một yêu cầu `GET` sẽ được gửi đến endpoint `api/v1/email-verification/verify`.
+
+      ```csharp
+      // File: src/MyShop.Server/Controllers/EmailVerificationController.cs
+      [HttpGet("verify")]
+      [AllowAnonymous] // Endpoint này phải công khai để người dùng chưa đăng nhập có thể truy cập
+      public async Task<IActionResult> VerifyEmail([FromQuery] string token, CancellationToken cancellationToken)
+      {
+          var result = await _emailVerificationService.VerifyEmailAsync(token, cancellationToken);
+
+          if (result.IsSuccess)
+          {
+              // Chuyển hướng đến trang thành công
+              return Redirect(_configuration["EmailVerification:SuccessRedirectUrl"]);
+          }
+          // Chuyển hướng đến trang lỗi
+          return Redirect(_configuration["EmailVerification:ErrorRedirectUrl"]);
+      }
+      ```
+
+3.  **Xác thực Token và Cập nhật Trạng thái:**
+
+    - `EmailVerificationService` nhận token từ controller và thực hiện xác thực:
+      - Kiểm tra chữ ký (signature) để đảm bảo token không bị thay đổi.
+      - Kiểm tra thời gian hết hạn (expiration).
+      - Kiểm tra claim `purpose` phải là `"email_verification"`.
+    - Nếu token hợp lệ, service sẽ trích xuất `userId`, tìm người dùng trong cơ sở dữ liệu và cập nhật trường `IsEmailVerified` thành `true`.
+
+      ```csharp
+      // File: src/MyShop.Server/Services/Implementations/EmailVerificationService.cs
+      public async Task<ServiceResult> VerifyEmailAsync(string token, CancellationToken cancellationToken = default)
+      {
+          var userId = ValidateVerificationToken(token); // Xác thực token
+          if (userId == null)
+          {
+              return ServiceResult.Failure("Invalid or expired verification token");
+          }
+
+          var user = await _userRepository.GetByIdAsync(userId.Value);
+          if (user == null) { /* ... */ }
+
+          user.IsEmailVerified = true; // Cập nhật trạng thái
+          user.UpdatedAt = DateTime.UtcNow;
+
+          await _userRepository.UpdateAsync(user); // Lưu thay đổi
+
+          return ServiceResult.Success("Email verified successfully");
+      }
+      ```
+
+**Lợi ích:**
+
+- **Bảo mật:** Token được ký và có thời hạn, ngăn chặn các cuộc tấn công giả mạo hoặc sử dụng lại token cũ.
+- **Trải nghiệm người dùng tốt:** Quy trình tự động và liền mạch, người dùng chỉ cần một cú nhấp chuột để xác thực.
+- **Toàn vẹn dữ liệu:** Đảm bảo rằng mỗi tài khoản được liên kết với một địa chỉ email có thật và có thể truy cập được.
+
+### 7.6. Weekly Sales Forecast
 
 **[PHÂN CÔNG: AI DEVELOPER]**
 
@@ -2003,16 +3065,7 @@ Việc test được thực hiện trực tiếp trên ứng dụng WinUI 3 buil
   - Tách biệt rõ ràng AI service khỏi UI/backend, dễ bảo trì và triển khai
   - Phù hợp mở rộng production: logging/monitoring, retraining định kỳ, A/B testing chiến lược model
 
-### 7.5. [Send email - verify account - Thịnh Soạn]
-
-**[PHÂN CÔNG: BACKEND DEVELOPER]**
-
-- **Mô tả:** [Chi tiết tính năng]
-- **Công nghệ sử dụng:** [Công nghệ không được dạy trên lớp]
-- **Implementation:** [Cách triển khai]
-- **Lợi ích:** [Giá trị mang lại]
-
-### 7.6. Website for selling activation codes
+### 7.7. Website for selling activation codes
 
 **[LEADER]**
 
@@ -2067,7 +3120,7 @@ Việc test được thực hiện trực tiếp trên ứng dụng WinUI 3 buil
     - Nhận code qua email ngay lập tức
     - Hướng dẫn rõ ràng từng bước
 
-### 7.7. MOMO Payment
+### 7.8. MOMO Payment
 
 - Sử dụng `MOMO-WALLET` của momo để có giao diện và có orderId từ momo, thực hiện triển khai api để sử dụng và đoán callback từ momo gửi về sau đó xử lí việc `generate code` và `send code` tới email. Đây là phần đã được triển khai rõ trong `Web bán code`
 
