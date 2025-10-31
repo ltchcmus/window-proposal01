@@ -1425,7 +1425,120 @@ public ObservableCollection<ProductModel> Products { get; set; }
 
 ---
 
-#### 4.3.4. MVVM Toolkit Usage
+#### 4.3.4. Core & Helper Services
+
+Đây là các lớp logic nghiệp vụ hoặc hỗ trợ, độc lập với UI. Chúng được quản lý bởi **Dependency Injection** và inject vào ViewModels. Chúng được tổ chức trong các thư mục `Core` (cho nghiệp vụ chính) và `Helpers` (cho các tiện ích hỗ trợ).
+
+Cấu trúc thư mục:
+```
+MyShop.Client/  
+├─ Core/  
+│  ├─ Services/  
+│  ├─ Repositories/  
+│  └─ ...  
+└─ Helpers/
+   ├─ INavigationService.cs     
+   ├─ NavigationService.cs     
+   ├─ IToastHelper.cs     
+   ├─ ToastHelper.cs     
+   └─ AuthHeaderHandler.cs
+```
+
+Vai trò:
+
+- Tách biệt logic: ViewModel không biết cách điều hướng hay cách hiển thị toast. Nó chỉ yêu cầu service thực hiện.
+- Dễ bảo trì: Thay đổi logic điều hướng (VD: thêm animation) chỉ cần sửa ở `NavigationService`, không ảnh hưởng ViewModel.
+- Dễ kiểm thử (Testable): Có thể mock `INavigationService` để unit test ViewModel.
+
+---
+
+#### Các Services/Helpers chính
+
+- INavigationService (trong `Helpers`): Chịu trách nhiệm điều hướng giữa các Page.
+- IToastHelper (trong `Helpers`): Đóng gói logic hiển thị thông báo (toast, dialog lỗi) thống nhất.
+- IProductService: Một service nghiệp vụ, chịu trách nhiệm gọi ApiClient để lấy/cập nhật dữ liệu sản phẩm, xử lý lỗi mạng, caching, v.v.
+
+---
+
+#### 4.3.5. Dependency Injection (DI)
+
+Chúng ta sử dụng **Microsoft.Extensions.DependencyInjection** để quản lý việc khởi tạo và vòng đời của Services và ViewModels.
+
+#### Cấu hình (trong App.xaml.cs)
+
+File `App.xaml.cs` là nơi đăng ký tất cả các "dịch vụ".
+
+```csharp
+public partial class App : Application
+{
+    public IServiceProvider Services { get; }
+
+    public App()
+    {
+        Services = ConfigureServices();
+        this.InitializeComponent();
+    }
+
+    private static IServiceProvider ConfigureServices()
+    {
+        var services = new ServiceCollection();
+
+        // Đăng ký Services & Helpers
+        // Singleton: Chỉ có 1 thể hiện duy nhất trong suốt vòng đời ứng dụng
+        services.AddSingleton<IToastHelper, ToastHelper>();
+        services.AddSingleton<INavigationService, NavigationService>();
+        
+        // (Ví dụ) Đăng ký Service nghiệp vụ
+        // services.AddSingleton<IProductService, ProductService>();
+
+        // Đăng ký ViewModels
+        // Transient: Một thể hiện mới được tạo mỗi khi được yêu cầu
+        services.AddTransient<LoginViewModel>();
+        services.AddTransient<DashboardViewModel>();
+        services.AddTransient<ProductsViewModel>();
+
+        // (Tùy chọn) Đăng ký Pages
+        services.AddTransient<LoginPage>();
+        services.AddTransient<DashboardPage>();
+        services.AddTransient<ProductsPage>();
+
+        return services.BuildServiceProvider();
+    }
+    
+    // ... OnLaunched
+}
+```
+Sử dụng (Trong View Code-Behind)
+View (Page) sẽ lấy ViewModel tương ứng từ DI container.
+
+```csharp
+// Trong ProductsPage.xaml.cs
+public sealed partial class ProductsPage : Page
+{
+    // ViewModel được resolve từ DI container
+    public ProductsViewModel ViewModel { get; }
+
+    public ProductsPage()
+    {
+        this.InitializeComponent();
+        
+        // Lấy ViewModel từ App.Current
+        ViewModel = (Application.Current as App).Services.GetRequiredService<ProductsViewModel>();
+        
+        // DataContext không cần gán ở đây nếu dùng x:Bind
+        // DataContext = ViewModel;
+    }
+
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        // Gọi lệnh load data khi trang được điều hướng tới
+        await ViewModel.LoadProductsAsync();
+    }
+}
+```
+
+#### 4.3.6. MVVM Toolkit Usage
 
 #### CommunityToolkit.Mvvm
 
