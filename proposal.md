@@ -10,7 +10,7 @@
 | --- | ------------------- | -------- | -------------------------- | ----------------------------- | ----------------------------------------------------------------------------------- |
 | 1   | Nguyễn Hưng Thịnh   | 23120200 | Backend Developer          | nguyenhungthinha1@gmail.com   | [oppaii230205](https://github.com/oppaii230205)                                     |
 | 2   | Lê Thành Công       | 23120222 | Leader / Backend Developer | ltchcmus@gmail.com            | [ltchcmus](https://github.com/ltchcmus) / [05-victor](https://github.com/05-victor) |
-| 3   | Lê Tấn Hiệp         | 23120255 | Frontend Developer         | tanhiep24135@gmail.com        | [github]                                                                            |
+| 3   | Lê Tấn Hiệp         | 23120255 | Frontend Developer         | tanhiep24135@gmail.com        | [ThachHaoo](https://github.com/ThachHaoo)                                                                            |
 | 4   | Tống Dương Thái Hòa | 23120262 | Frontend Developer         | tdthoa.hry@gmai.com           | [henry-banana](https://github.com/henry-banana)                                     |
 | 5   | Nguyễn Huy Hoàng    | 23122031 | AI Developer               | 23122031@student.hcmus.edu.vn | [Link](https://github.com/hhlearntocode)                                            |
 
@@ -2312,6 +2312,92 @@ Việc đặt tên nhất quán là yếu tố cơ bản nhất để tạo ra m
 #### 6.1.5. WinUI Specific Conventions:
 
 [Frontend Developer điền thêm]
+
+##### XAML & Binding
+- Ưu tiên `x:Bind` thay cho `Binding` (hiệu năng + kiểm tra biên dịch). Chỉ dùng `Binding` khi `DataContext` thay đổi động.
+- Mặc định `Mode=OneWay`; với input dùng `Mode=TwoWay` và `UpdateSourceTrigger=PropertyChanged` khi cần cập nhật tức thời.
+- Đặt tên phần tử PascalCase + hậu tố rõ nghĩa: `LoginButton`, `UsernameTextBox`, `RootGrid`.
+- Hạn chế logic ở code-behind; chỉ xử lý wiring UI.
+- Dùng `x:Load`/`DeferLoadStrategy="Lazy"` cho UI nặng, ít xuất hiện.
+
+##### Converters
+- Lưu tại `Views/Converters`, tên kết thúc `Converter` (ví dụ: `StringToVisibilityConverter`).
+- Khai báo trong `App.xaml` với `x:Key` ngắn gọn, mô tả đúng chức năng (ví dụ: `StringToVisibilityConverter`, `BoolNegationConverter`, `BoolToVisibilityConverter`, `ValidationErrorConverter`).
+- Chỉ dùng khi không thể giải quyết bằng `x:Bind`, `TargetNullValue`, `FallbackValue`, `StringFormat`.
+
+##### MVVM (CommunityToolkit.Mvvm)
+- ViewModel: PascalCase + hậu tố `ViewModel` (mỗi `Page` một VM). Thuộc tính dùng `[ObservableProperty]`, lệnh dùng `[RelayCommand]`. Lệnh async hậu tố `Async`.
+- Tránh `async void` (trừ event UI). Phương thức public trả `Task/Task<T>`.
+- DI: Resolve VM qua `App.Current.Services.GetRequiredService<TViewModel>()`. Không inject service trực tiếp vào `Page` ngoài mục đích khởi tạo VM.
+- Phân tách service gọi API ra lớp riêng, không đặt trong VM.
+
+##### Điều hướng (Navigation)
+- Tập trung hoá qua `INavigationService`. Không gọi `Frame.Navigate` trực tiếp ngoài service.
+- Điều hướng bằng kiểu trang + tham số: `NavigateTo(typeof(TargetPage), param)`.
+- Trang nhận tham số trong `OnNavigatedTo` (hoặc pattern `INavigationAware`), validate null/kiểu.
+- `NavigationCacheMode`: `Required` cho dashboard/stateful; còn lại `Default`.
+
+##### Dialogs, Popups & Windows
+- Trước khi `ShowAsync()` với `ContentDialog`, luôn gán `XamlRoot` từ `Window.Content.XamlRoot`. Tận dụng `ToastHelper` để thống nhất hiển thị (ví dụ: `Initialize`, `ShowSuccess/Error/Info`, `ShowConnectionErrorAsync`).
+- Không chặn UI thread; mọi dialog đều `await`.
+- Với nhiều cửa sổ, quản lý vòng đời tránh rò rỉ; gán `XamlRoot` đúng cửa sổ đang hoạt động.
+
+##### Tài nguyên, Styles & Theming
+- Giữ `XamlControlsResources` trong `App.xaml`.
+- Tách `ResourceDictionary` theo nhóm: `Resources/Colors.xaml`, `Resources/Brushes.xaml`, `Resources/Styles.xaml`, `Resources/Converters.xaml`; merge một lần ở `App.xaml`.
+- Dùng `ThemeDictionaries` hỗ trợ Light/Dark/HighContrast. Tránh hard-code màu; ưu tiên `ThemeResource`.
+
+##### Cấu trúc & Đặt tên
+- Thư mục: `Views/Pages`, `Views/Controls`, `Views/Converters`, `ViewModels`, `Services` (`Interfaces`/`Implementations`), `Resources`.
+- Tên:
+  - Page kết thúc `Page` (ví dụ: `LoginPage`); UserControl kết thúc `Control`.
+  - Interface bắt đầu `I` (ví dụ: `INavigationService`, `IToastHelper`).
+  - Service kết thúc `Service`, Helper kết thúc `Helper`, Converter kết thúc `Converter`.
+- Tên tệp trùng tên lớp/kiểu.
+
+##### Hiệu năng
+- Ưu tiên `x:Bind`, tránh binding phức tạp trong `ItemsPanel`.
+- Danh sách dài: bật ảo hoá (ListView/GridView) hoặc `ItemsRepeater`.
+- Giảm độ sâu cây visual; dùng `Spacing` thay vì `Margin` chồng chéo.
+- Công việc nặng: nền (`Task.Run`) và cập nhật UI qua `DispatcherQueue.TryEnqueue`.
+
+##### Xác thực & Hiển thị lỗi
+- Biểu mẫu: thuộc tính lỗi trong VM (ví dụ: `UsernameError`) hoặc `INotifyDataErrorInfo` cho quy mô lớn.
+- Thông điệp lỗi ngắn gọn, gần control; thống nhất màu/icon.
+- Tận dụng converters sẵn có như trong `App.xaml`.
+
+##### Trợ năng (Accessibility) & Nội địa hoá (Localization)
+- Thêm `AutomationProperties.Name/HelpText` cho control tương tác; thứ tự Tab hợp lý, có `AccessKey` cho hành động chính.
+- Localization qua `x:Uid`; chuỗi trong `Resources.resw`. Không hard-code text trong XAML/C#.
+
+##### Mạng & API
+- Dùng `HttpClientFactory` + Refit (`Refit.HttpClientFactory`, `Refit.Newtonsoft.Json`). Cấu hình `HttpClient` trong DI, không tạo mới thủ công.
+- Thiết lập timeout, phân loại lỗi (network/server/validation) và hiển thị nhất quán qua `ToastHelper`.
+- Retry/circuit-breaker nếu cần: đặt ở Service layer (có thể dùng Polly).
+
+##### Vòng đời ứng dụng
+- `OnLaunched` tối giản: khởi tạo DI, điều hướng trang đầu tiên. Bắt lỗi và ghi log.
+- Thiết lập theme, Backdrop, TitleBar ở `MainWindow`, tránh cấu hình lặp lại per-page.
+- Lưu/khôi phục trạng thái phù hợp với `NavigationCacheMode`.
+
+##### Logging & Chẩn đoán
+- Dùng `ILogger<T>` cho log có cấu trúc. Không log dữ liệu nhạy cảm.
+- Mức log: `Information` cho luồng chính, `Warning/Error` cho sự cố.
+- Đường đi xử lý lỗi UI thống nhất (toast + optional điều hướng trang hỗ trợ).
+
+##### Kiểm thử thủ công & Checklist PR
+- Kiểm Light/Dark/HighContrast, back navigation, dữ liệu tham số điều hướng, localization.
+- PR checklist:
+  - [ ] Theo style XAML/C#
+  - [ ] Không logic nghiệp vụ trong View
+  - [ ] Không `async void` (trừ event)
+  - [ ] Không block UI
+  - [ ] Log phù hợp
+
+##### Chuẩn mã C#
+- `PascalCase` cho public, `camelCase` cho tham số, `_camelCase` cho trường `private readonly`.
+- Dùng `var` khi kiểu rõ ràng.
+- Nullable bật (`<Nullable>enable</Nullable>`). Async hậu tố `Async`, trả `Task/Task<T>`.
 
 #### 6.1.6. Python Conventions (AI)
 
