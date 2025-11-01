@@ -10,7 +10,11 @@
 | --- | ------------------- | -------- | -------------------------- | ----------------------------- | ----------------------------------------------------------------------------------- |
 | 1   | Nguyễn Hưng Thịnh   | 23120200 | Backend Developer          | nguyenhungthinha1@gmail.com   | [oppaii230205](https://github.com/oppaii230205)                                     |
 | 2   | Lê Thành Công       | 23120222 | Leader / Backend Developer | ltchcmus@gmail.com            | [ltchcmus](https://github.com/ltchcmus) / [05-victor](https://github.com/05-victor) |
+<<<<<<< Updated upstream
 | 3   | Lê Tấn Hiệp         | 23120255 | Frontend Developer         | tanhiep24135@gmail.com        | [ThachHaoo](https://github.com/ThachHaoo)                                                                            |
+=======
+| 3   | Lê Tấn Hiệp         | 23120255 | Frontend Developer         | tanhiep24135@gmail.com        | [ThachHaoo](https://github.com/ThachHaoo)                                            |
+>>>>>>> Stashed changes
 | 4   | Tống Dương Thái Hòa | 23120262 | Frontend Developer         | tdthoa.hry@gmai.com           | [henry-banana](https://github.com/henry-banana)                                     |
 | 5   | Nguyễn Huy Hoàng    | 23122031 | AI Developer               | 23122031@student.hcmus.edu.vn | [Link](https://github.com/hhlearntocode)                                            |
 
@@ -252,11 +256,14 @@ Login → Detect Role
 
 - Hai layout song song (Login – Register), sử dụng gradient nền WinUI 3:
   - Login: xanh navy `#1A4D8F → #2563EB`
-  - Register: xanh ngọc `#10B981 → #00AEEF`
+  - Register: xanh lá `#10B981 → #0ace0dff`
 - Giao diện card bo tròn, bóng đổ mềm, sử dụng Inter/Roboto.
 - Login gồm: Username/Email, Password, Remember me, nút “Sign In” và “Sign in with Google”.
 - Register gồm: Username, Email, Phone, Password, Confirm Password, Role (Customer/SalesAgent).
 - Có liên kết cấu hình server “⚙ Configure Server” ở góc dưới trái.
+- Ảnh mô tả:
+![temp (18)](https://hackmd.io/_uploads/r1LW_y7JWg.png)
+![temp (19)](https://hackmd.io/_uploads/rJLb_17ybe.png)
 
 **Màn hình trang chủ**
 
@@ -266,41 +273,134 @@ Login → Detect Role
 - Có các filter cơ bản: Tên, Loại, Khoảng giá, Sort theo Giá / Rating.
 - Nút “Add to Cart” với hover animation.
 
+![temp (4)](https://hackmd.io/_uploads/Sy5OukQy-x.png)
+
 **Màn hình sản phẩm**
 
 - Lưới sản phẩm đầy đủ thông tin: hình, tên, giá, rating, trạng thái tồn kho.
 - Bộ lọc đầu trang: Tìm kiếm, Loại hàng, Khoảng giá, Sắp xếp.
 - Có nút “View Details” mở modal chi tiết sản phẩm.
+![temp (5)](https://hackmd.io/_uploads/BkIY_ymJWg.png)
 
 **Màn hình giỏ hàng**
 
-- Bảng hiển thị danh sách sản phẩm trong giỏ:
-  | Hình | Tên sản phẩm | Số lượng | Đơn giá | Thành tiền | Xóa |
+- Bảng hiển thị danh sách sản phẩm trong giỏ.
 - Tổng giá trị, thuế, phí vận chuyển, và tổng đơn hàng.
 - Nút **Proceed to Checkout** → hiển thị modal xác nhận.
+![temp (6)](https://hackmd.io/_uploads/ryxcuymkZl.png)
 
 #### 2.2.2. Admin Dashboard Flow (Focus chính)
 
 - **Dashboard Overview**
-  - [Mô tả chi tiết dashboard admin]
-  - [Các widget thống kê]
-  - [Biểu đồ và báo cáo]
-- **Quản lý sản phẩm**
-  - [Giao diện CRUD sản phẩm]
-- **Quản lý đơn hàng**
-  - [Giao diện quản lý đơn hàng]
-    ...
+  - Bố cục 2 cột: Sidebar trái (NavigationView) + nội dung phải với lưới nhiều cột.
+  - KPI Cards (hàng trên):
+    - Hôm nay: Doanh thu (đơn vị VND), Số đơn hàng, Khách hàng hoạt động, Sản phẩm sắp hết hàng (< 10)
+    - Mỗi card có icon, trend vs. ngày hôm qua, tooltip chi tiết.
+  - Biểu đồ chính (hàng giữa):
+    - Doanh thu theo thời gian (Line chart: ngày/tuần/tháng)
+    - Phân bổ doanh thu theo danh mục (Donut/Pie)
+    - Top 5 sản phẩm theo doanh thu hoặc rating (Bar chart)
+    - Tình trạng đơn hàng (Stacked area: Pending/Processing/Shipped/Delivered/Canceled)
+  - Bảng “Recent Orders” (hàng dưới): 10 đơn mới nhất với trạng thái (chip màu), tổng tiền, ngày tạo, khách hàng, và nút chi tiết.
+  - Cảnh báo (InfoBar): danh sách sản phẩm Low-stock (< 10) và sản phẩm hết hàng.
+![temp (10)](https://hackmd.io/_uploads/BkK6O17kWe.png)
 
-#### 2.2.3. Salasagent Dasboard Flow
+- **Quản lý sản phẩm**
+  - Danh sách sản phẩm (DataGrid):
+    - Cột: SKU, Tên, Danh mục, Nhãn hàng, Giá, Tồn kho, Rating (1–5), Trạng thái, Hành động (Edit/Delete)
+    - Hỗ trợ chọn nhiều (multi-select) để xóa hàng loạt hoặc xuất dữ liệu.
+  - Bộ lọc & Sắp xếp:
+    - Tên (search box), Thiết bị/Danh mục (ComboBox), Khoảng giá (min–max slider), Rating (>=), Trạng thái (In-stock/Out-of-stock)
+    - Sắp xếp theo Giá ↑/↓, Rating ↑/↓, Số lượng tồn kho ↑/↓
+    - Phân trang: 12/24/48 per page; hiển thị tổng số kết quả.
+  - CRUD Dialogs (ContentDialog):
+    - Thêm/Sửa sản phẩm: Tên, Mô tả, Danh mục, Nhãn hàng, Giá, Ảnh, Tồn kho ban đầu, Thuộc tính mở rộng.
+    - Upload ảnh: xem trước (preview), kiểm tra định dạng và kích thước.
+    - Xác nhận xóa: yêu cầu xác nhận 2 bước nếu sản phẩm có đơn hàng liên quan.
+  - Xuất dữ liệu: CSV/Excel; hỗ trợ bộ lọc hiện tại.
+  - Nhanh: Tab “Sắp hết hàng” liệt kê các sản phẩm có tồn < 10 để ưu tiên nhập hàng.
+![temp (11)](https://hackmd.io/_uploads/r1cR_JQkZl.png)
+
+- **Quản lý đơn hàng**
+  - Danh sách đơn (DataGrid):
+    - Cột: Mã đơn, Khách hàng, Số mặt hàng, Tổng tiền, Trạng thái (chip), Thanh toán, Ngày tạo, Hành động
+  - Lọc & Tìm kiếm:
+    - Tên khách hàng / Mã đơn, Sản phẩm, Trạng thái, Khoảng ngày (DateRange), Phương thức thanh toán
+  - Hover doanh thu: di chuột vào tổng tiền hiển thị tooltip breakdown (subtotal, tax, discount, shipping).
+  - Chi tiết đơn: Pane/Modal với danh sách item, địa chỉ giao, timeline trạng thái; cho phép cập nhật trạng thái (Admin).
+  - Thống kê nhanh: tổng đơn hôm nay, tổng doanh thu hôm nay, tỷ lệ hủy.
+![temp (12)](https://hackmd.io/_uploads/By-1ty7kWx.png)
+![temp (13)](https://hackmd.io/_uploads/rka1F17J-e.png)
+
+- **Users**
+  - Danh sách Sales Agent và Khách hàng; tìm kiếm, lọc theo trạng thái.
+  - Hành động: Promote user → SalesAgent, khóa/mở khóa, reset mật khẩu (nếu có chính sách), xem lịch sử hoạt động.
+  - Kích hoạt Admin bằng code (tích hợp External API) với ContentDialog nhập mã.
+![temp (14)](https://hackmd.io/_uploads/rJFgK17k-l.png)
+![temp (15)](https://hackmd.io/_uploads/Hk1bFkQyZe.png)
+
+- **Settings**
+  - Cấu hình máy chủ API (ServerConfigDialog).
+  - Hồ sơ & bảo mật: thay ảnh đại diện, đổi mật khẩu, bật xác thực email nếu chưa xác thực.
+
+![temp (17)](https://hackmd.io/_uploads/S19VKJ7J-e.png)
+![temp21](https://hackmd.io/_uploads/S1vQt1Q1be.png)
+
+#### 2.2.3. Sales Agent Dashboard Flow
 
 - **Dashboard Overview**
-- Mô tả
-  ...
+  - KPI cá nhân: Doanh thu từ affiliate, Số click link, Tỉ lệ chuyển đổi, Hoa hồng chờ duyệt.
+  - Biểu đồ hiệu suất theo thời gian (doanh thu/đơn hàng từ link), top sản phẩm mang lại doanh thu.
+  - Bảng đơn hàng phát sinh từ affiliate (read-only), cho phép xem chi tiết nhưng không chỉnh sửa.
+![temp (20)](https://hackmd.io/_uploads/ryv_F1XJbg.png)
+
+- **Công cụ Affiliate**
+  - Tạo link affiliate theo sản phẩm, copy nhanh, hiển thị QR.
+  - Theo dõi hiệu suất theo link: click, add-to-cart, purchase, commission dự kiến.
+![temp (21)](https://hackmd.io/_uploads/SyTuFJXJbl.png)
+![temp (22)](https://hackmd.io/_uploads/SkUYF1X1bx.png)
+
+- **Sản phẩm & Đơn hàng (quyền hạn hạn chế)**
+  - Xem danh sách sản phẩm, bộ lọc cơ bản (tên, danh mục, khoảng giá, rating).
+  - Xem danh sách đơn hàng liên quan; không có quyền xóa/sửa đơn hoặc chỉnh tồn kho.
+![temp (23)](https://hackmd.io/_uploads/By9FFkmJ-l.png)
+
+- **Hồ sơ**
+  - Cập nhật thông tin cá nhân cơ bản, xem tổng hoa hồng, yêu cầu rút.
+![temp (3)](https://hackmd.io/_uploads/B14oFkX1-g.png)
 
 ### 2.3. User Experience (UX)
 
-- [Mô tả về trải nghiệm người dùng]
-- [Nguyên tắc thiết kế đã áp dụng]
+- **Nguyên tắc thiết kế**
+  - Rõ ràng, nhất quán, tối giản; nhấn mạnh phân cấp thị giác (KPI → biểu đồ → bảng).
+  - Sử dụng màu nền gradient cho Auth (Login: `#1A4D8F → #2563EB`, Register: `#10B981 → #00ef08ff`) và accent đồng bộ trong app.
+  - Typography: Inter/Roboto, cỡ chữ theo scale 12/14/16/20/24/32.
+
+- **Điều hướng & Bố cục**
+  - NavigationView (sidebar) cố định cho Dashboard; CommandBar ngữ cảnh (thêm/sửa/xuất/lọc).
+  - Breadcrumbs ở phần tiêu đề trang cho luồng sâu (Orders → Order #12345).
+  - Tìm kiếm nhanh (Ctrl+K) mở hộp tìm kiếm toàn cục (dự kiến).
+
+- **Trạng thái & Phản hồi**
+  - Loading: Skeleton cho bảng/thẻ; ProgressRing cho hành động.
+  - Empty state: mô tả ngắn + nút hành động (VD: “Chưa có sản phẩm, Thêm sản phẩm mới”).
+  - Lỗi: InfoBar đỏ với chi tiết có thể copy; toast thông báo thành công/thất bại.
+  - Xác thực Form: inline validation, lỗi tập trung ở đầu dialog nếu nhiều trường.
+
+- **Khả năng truy cập (A11y)**
+  - Tương phản màu đủ (WCAG AA), Focus visible, hỗ trợ phím tắt cho hành động phổ biến.
+  - Trật tự Tab hợp lý; hỗ trợ Narrator cho các phần tử có trạng thái (chips, badges).
+
+- **Responsive/Windowing**
+  - Thiết kế tối ưu cho ≥1280px; thích ứng 1024px/800px: lưới sản phẩm 4→3→2 cột; bảng co giãn, ẩn cột ít quan trọng.
+  - Min window size đề xuất: 1024×700; hỗ trợ Maximize/Restore mượt.
+
+- **Hiệu năng**
+  - Ảo hóa danh sách/bảng; phân trang 12/24/48; trì hoãn tải ảnh (deferred image loading).
+  - Cache client cho filter gần nhất; chỉ gọi API khi người dùng dừng nhập (debounce 300–500ms).
+
+- **Prototype & Handoff**
+  - Prototype bao phủ: Login, Register, Admin/Customer/Sales Agent Dashboard, Products (list + dialogs), Orders (list + detail), Reports, Users, Settings, Server Config.
 
 ---
 
@@ -2545,7 +2645,7 @@ Tham khảo: [PEP 8 Style Guide](https://peps.python.org/pep-0008/)
 
 ##### **UI Testing Approach**
 
-Mục tiêu của manual testing là **đảm bảo giao diện người dùng (UI)** và **luồng thao tác (UX)** hoạt động đúng như thiết kế Figma Make, đồng thời xác nhận các binding dữ liệu, command và navigation hoạt động ổn định trong mô hình **MVVM**.
+Mục tiêu của manual testing là **đảm bảo giao diện người dùng (UI)** và **luồng thao tác (UX)** hoạt động đúng như thiết kế Figma, đồng thời xác nhận các binding dữ liệu, command và navigation hoạt động ổn định trong mô hình **MVVM**.
 Việc test được thực hiện trực tiếp trên ứng dụng WinUI 3 build bằng chế độ Debug.
 
 **Phương pháp thực hiện:**
@@ -3627,7 +3727,7 @@ Dự án MyShop2025 được triển khai từ **01/10/2025 đến 02/11/2025**,
 ### B. Link quan trọng
 
 - **Repository:** [GitHub](https://github.com/05-victor/MyShop2025)
-- **Figma Design:** [Figma link]
+- **Figma Design:** [Figma link](https://www.figma.com/design/PcHAE5fWwCBBIVyM5IEQbZ/MyShop2025?node-id=0-1&t=3vviC6L7HyownqWW-1)
 - **Project Management:**
   - [GitHub](https://github.com/05-victor/MyShop2025)
   - [Trello](https://trello.com/invite/b/6900a46d2e34563da489c3f5/ATTId5e7db9a9b2e7dd86ceca2b4bdfc89d419C4829F/window)
