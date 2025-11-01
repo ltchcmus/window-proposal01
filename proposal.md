@@ -1281,67 +1281,85 @@ Tầng này chịu trách nhiệm hoàn toàn về việc tương tác với cơ
 
 #### 4.3.1. Model
 
-#### Data Models
+#### Domain Models
 
 Các lớp **Model** đại diện cho dữ liệu nghiệp vụ chính của hệ thống.
-Mỗi model ánh xạ trực tiếp với các bảng hoặc entity trong cơ sở dữ liệu hoặc API trả về.
+Các models này tách biệt khỏi DTOs từ backend, cho phép frontend có cấu trúc dữ liệu phù hợp với nhu cầu UI.
 
-Cấu trúc thư mục:
+Cấu trúc thư mục thực tế:
 
 ```
-MyShop/
+MyShop.Client/
  ├─ Models/
- │   ├─ ProductModel.cs
- │   ├─ OrderModel.cs
- │   ├─ OrderItemModel.cs
- │   ├─ CategoryModel.cs
- │   ├─ UserModel.cs
- │   ├─ ReportModel.cs
- │   └─ AuthModel.cs
+ │   ├─ User.cs           # Domain model cho User
+ │   └─ Enums/
+ │       └─ UserRole.cs   # Enum định nghĩa các vai trò
 ```
 
-Mẫu:
+**Ví dụ thực tế - User Model:**
 
 ```csharp
-public class ProductModel
+// File: src/MyShop.Client/Models/User.cs
+public class User
 {
-    public int Id { get; set; }
-    public string SKU { get; set; }
-    public string Name { get; set; }
-    public string Category { get; set; }
-    public decimal ImportPrice { get; set; }
-    public decimal SalePrice { get; set; }
-    public int Stock { get; set; }
-    public double Rating { get; set; }
-    public string ImageUrl { get; set; }
+    public Guid Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public bool IsTrialActive { get; set; }
+    public DateTime? TrialStartDate { get; set; }
+    public DateTime? TrialEndDate { get; set; }
+    public bool IsEmailVerified { get; set; }
+    public List<UserRole> Roles { get; set; } = new();
+    public string Token { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Check xem user có role cụ thể không
+    /// </summary>
+    public bool HasRole(UserRole role) => Roles.Contains(role);
+
+    /// <summary>
+    /// Lấy role cao nhất (Admin > Salesman > Customer)
+    /// </summary>
+    public UserRole GetPrimaryRole()
+    {
+        if (Roles.Contains(UserRole.Admin)) return UserRole.Admin;
+        if (Roles.Contains(UserRole.Salesman)) return UserRole.Salesman;
+        return UserRole.Customer;
+    }
 }
 ```
 
-**Đặc điểm để ứng dụng:**
+**UserRole Enum:**
 
-- Thuần dữ liệu, không chứa logic xử lý.
-- Dễ serial hóa/deserial hóa (JSON <-> C# object).
-- Dùng chung cho cả binding và request API.
+```csharp
+// File: src/MyShop.Client/Models/Enums/UserRole.cs
+public enum UserRole
+{
+    Customer = 0,
+    Salesman = 1,
+    Admin = 2
+}
+```
+
+**Đặc điểm:**
+
+- Chứa business logic đơn giản (như `HasRole()`, `GetPrimaryRole()`).
+- Tách biệt khỏi DTOs từ API để UI có cấu trúc dữ liệu phù hợp.
+- Dễ serialize/deserialize khi làm việc với API.
 
 ---
 
-#### API Models
+#### DTOs (Shared với Backend)
 
-Các lớp model trung gian được thiết kế để mapping dữ liệu giữa API và UI.
-Mẫu:
+Dự án sử dụng **MyShop.Shared** project chứa các DTOs được dùng chung giữa Client và Server.
+Các DTOs này được truyền qua API và được map sang Domain Models khi cần.
 
-```csharp
-public class ProductResponse
-{
-    public List<ProductModel> Data { get; set; }
-    public int TotalCount { get; set; }
-    public int CurrentPage { get; set; }
-}
-```
-
-- Tách biệt rõ dữ liệu hiển thị (`ProductModel`) và dữ liệu phản hồi (`ProductResponse`).
-- Giúp xử lý dễ hơn với phân trang, lọc, và response meta-data.
-- Được định nghĩa trong `Models/API/` để dễ mở rộng.
+**Lợi ích:**
+- Đảm bảo tính nhất quán dữ liệu giữa Client và Server.
+- Giảm thiểu lỗi do cấu trúc dữ liệu không khớp.
+- Tách biệt rõ ràng giữa API contract (DTOs) và Domain logic (Models).
 
 ---
 
@@ -1430,56 +1448,114 @@ Ngược lại, nếu ViewModel thay đổi, UI cũng tự động phản ánh l
 
 Mỗi trang (View) có ViewModel tương ứng trong thư mục `ViewModels/`.
 
-Cấu trúc:
+Cấu trúc thực tế:
 
 ```
 ViewModels/
- ├─ DashboardViewModel.cs
- ├─ ProductsViewModel.cs
- ├─ OrdersViewModel.cs
- ├─ ReportsViewModel.cs
- ├─ UsersViewModel.cs
- ├─ SettingsViewModel.cs
- ├─ LoginViewModel.cs
- └─ RegisterViewModel.cs
+ ├─ Auth/
+ │   ├─ LoginViewModel.cs
+ │   └─ RegisterViewModel.cs
+ ├─ Dashboard/
+ │   ├─ AdminDashboardViewModel.cs
+ │   ├─ SalesmanDashboardViewModel.cs
+ │   └─ CustomerDashboardViewModel.cs
+ └─ Base/
+     └─ BaseViewModel.cs
 ```
 
 **Chức năng chính:**
 
-- Chứa logic xử lý UI (fetch API, validate, filter, sort, paging).
-- Giữ trạng thái của trang (selected item, filters, loading, error…).
+- Chứa logic xử lý UI (gọi Repository/Service, validate, xử lý state).
+- Giữ trạng thái của trang (loading, error, data collection).
 - Không thao tác trực tiếp với UI (chỉ thông qua Binding).
+- Sử dụng **Dependency Injection** để nhận services.
 
-Mẫu:
+**Ví dụ thực tế - LoginViewModel:**
 
 ```csharp
-public partial class ProductsViewModel : ObservableObject
+// File: src/MyShop.Client/ViewModels/Auth/LoginViewModel.cs
+public partial class LoginViewModel : BaseViewModel
 {
-    private readonly ApiClient _api;
+    private readonly IAuthRepository _authRepository;
+    private readonly INavigationService _navigationService;
+    private readonly IToastHelper _toastHelper;
+    private readonly IRoleStrategyFactory _roleStrategyFactory;
+    private readonly IValidationService _validationService;
 
     [ObservableProperty]
-    private ObservableCollection<ProductModel> products;
+    [NotifyPropertyChangedFor(nameof(IsFormValid))]
+    [NotifyCanExecuteChangedFor(nameof(AttemptLoginCommand))]
+    private string _username = string.Empty;
 
     [ObservableProperty]
-    private string searchKeyword;
+    [NotifyPropertyChangedFor(nameof(IsFormValid))]
+    [NotifyCanExecuteChangedFor(nameof(AttemptLoginCommand))]
+    private string _password = string.Empty;
 
-    public IRelayCommand SearchCommand { get; }
+    [ObservableProperty]
+    private string _usernameError = string.Empty;
 
-    public ProductsViewModel(ApiClient api)
+    [ObservableProperty]
+    private string _passwordError = string.Empty;
+
+    public bool IsFormValid => 
+        string.IsNullOrWhiteSpace(UsernameError) && 
+        string.IsNullOrWhiteSpace(PasswordError) && 
+        !string.IsNullOrWhiteSpace(Username) && 
+        !string.IsNullOrWhiteSpace(Password);
+
+    public LoginViewModel(
+        IAuthRepository authRepository,
+        INavigationService navigationService,
+        IToastHelper toastHelper,
+        IRoleStrategyFactory roleStrategyFactory,
+        IValidationService validationService)
     {
-        _api = api;
-        Products = new ObservableCollection<ProductModel>();
-        SearchCommand = new RelayCommand(async () => await SearchProducts());
+        _authRepository = authRepository;
+        _navigationService = navigationService;
+        _toastHelper = toastHelper;
+        _roleStrategyFactory = roleStrategyFactory;
+        _validationService = validationService;
     }
 
-    private async Task SearchProducts()
+    [RelayCommand(CanExecute = nameof(CanAttemptLogin))]
+    private async Task AttemptLoginAsync(CancellationToken cancellationToken)
     {
-        var data = await _api.GetProductsAsync(searchKeyword);
-        Products.Clear();
-        foreach (var p in data) Products.Add(p);
+        if (!ValidateInput()) return;
+        
+        SetLoadingState(true);
+        
+        var result = await _authRepository.LoginAsync(Username.Trim(), Password);
+        
+        if (result.IsSuccess && result.Data != null)
+        {
+            var user = result.Data;
+            
+            // Sử dụng Strategy Pattern để navigate
+            var primaryRole = user.GetPrimaryRole();
+            var strategy = _roleStrategyFactory.GetStrategy(primaryRole);
+            var pageType = strategy.GetDashboardPageType();
+            
+            _navigationService.NavigateTo(pageType, user);
+        }
+        else
+        {
+            SetError(result.ErrorMessage ?? "Login failed.");
+        }
+        
+        SetLoadingState(false);
     }
 }
 ```
+
+**Đặc điểm quan trọng:**
+
+- Sử dụng `[ObservableProperty]` để tự động sinh PropertyChanged.
+- Sử dụng `[NotifyPropertyChangedFor]` để notify các property phụ thuộc.
+- Sử dụng `[RelayCommand]` để tạo ICommand từ method.
+- Inject dependencies qua constructor (IAuthRepository, INavigationService, v.v.).
+- Sử dụng **Repository Pattern** thay vì gọi API trực tiếp.
+- Áp dụng **Strategy Pattern** cho role-based navigation.
 
 ---
 
@@ -1558,83 +1634,301 @@ Vai trò:
 
 #### 4.3.5. Dependency Injection (DI)
 
-Chúng ta sử dụng **Microsoft.Extensions.DependencyInjection** để quản lý việc khởi tạo và vòng đời của Services và ViewModels.
+Dự án sử dụng **Microsoft.Extensions.Hosting** và **Microsoft.Extensions.DependencyInjection** để quản lý DI.
+Việc cấu hình DI được tách riêng trong **Bootstrapper.cs** để code sạch hơn.
 
-#### Cấu hình (trong App.xaml.cs)
+#### Cấu hình DI
 
-File `App.xaml.cs` là nơi đăng ký tất cả các "dịch vụ".
+**1. App.xaml.cs - Entry Point:**
 
 ```csharp
+// File: src/MyShop.Client/App.xaml.cs
 public partial class App : Application
 {
-    public IServiceProvider Services { get; }
+    private readonly IHost _host;
+    public new static App Current => (App)Application.Current;
+    public IServiceProvider Services => _host.Services;
+    public static MainWindow? MainWindow { get; private set; }
 
     public App()
     {
-        Services = ConfigureServices();
         this.InitializeComponent();
+        _host = Bootstrapper.CreateHost(); // Tạo host với DI configuration
     }
 
-    private static IServiceProvider ConfigureServices()
+    protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-        var services = new ServiceCollection();
-
-        // Đăng ký Services & Helpers
-        // Singleton: Chỉ có 1 thể hiện duy nhất trong suốt vòng đời ứng dụng
-        services.AddSingleton<IToastHelper, ToastHelper>();
-        services.AddSingleton<INavigationService, NavigationService>();
+        MainWindow = new MainWindow();
         
-        // (Ví dụ) Đăng ký Service nghiệp vụ
-        // services.AddSingleton<IProductService, ProductService>();
-
-        // Đăng ký ViewModels
-        // Transient: Một thể hiện mới được tạo mỗi khi được yêu cầu
-        services.AddTransient<LoginViewModel>();
-        services.AddTransient<DashboardViewModel>();
-        services.AddTransient<ProductsViewModel>();
-
-        // (Tùy chọn) Đăng ký Pages
-        services.AddTransient<LoginPage>();
-        services.AddTransient<DashboardPage>();
-        services.AddTransient<ProductsPage>();
-
-        return services.BuildServiceProvider();
+        var navigationService = Services.GetRequiredService<INavigationService>();
+        navigationService.Initialize(MainWindow.RootFrame);
+        
+        // Auto-login nếu có token
+        var token = CredentialHelper.GetToken();
+        if (!string.IsNullOrEmpty(token))
+        {
+            var authRepository = Services.GetRequiredService<IAuthRepository>();
+            var result = await authRepository.GetCurrentUserAsync();
+            
+            if (result.IsSuccess && result.Data != null)
+            {
+                // Navigate đến dashboard tương ứng với role
+                var roleStrategyFactory = Services.GetRequiredService<IRoleStrategyFactory>();
+                var strategy = roleStrategyFactory.GetStrategy(result.Data.GetPrimaryRole());
+                navigationService.NavigateTo(strategy.GetDashboardPageType(), result.Data);
+            }
+            else
+            {
+                navigationService.NavigateTo(typeof(LoginPage));
+            }
+        }
+        else
+        {
+            navigationService.NavigateTo(typeof(LoginPage));
+        }
+        
+        MainWindow.Activate();
     }
-    
-    // ... OnLaunched
 }
 ```
-Sử dụng (Trong View Code-Behind)
-View (Page) sẽ lấy ViewModel tương ứng từ DI container.
+
+**2. Bootstrapper.cs - DI Configuration:**
 
 ```csharp
-// Trong ProductsPage.xaml.cs
-public sealed partial class ProductsPage : Page
+// File: src/MyShop.Client/Core/Config/Bootstrapper.cs
+public static class Bootstrapper
 {
-    // ViewModel được resolve từ DI container
-    public ProductsViewModel ViewModel { get; }
-
-    public ProductsPage()
+    public static IHost CreateHost()
     {
-        this.InitializeComponent();
-        
-        // Lấy ViewModel từ App.Current
-        ViewModel = (Application.Current as App).Services.GetRequiredService<ProductsViewModel>();
-        
-        // DataContext không cần gán ở đây nếu dùng x:Bind
-        // DataContext = ViewModel;
-    }
+        return Host.CreateDefaultBuilder()
+            .ConfigureAppConfiguration((context, config) =>
+            {
+                config.SetBasePath(AppContext.BaseDirectory);
+                config.AddJsonFile("ApiServer/ApiConfig.json", optional: false, reloadOnChange: true);
+            })
+            .ConfigureServices((context, services) =>
+            {
+                // Load configuration
+                AppConfig.Instance.LoadFromConfiguration(context.Configuration);
+                var useMockData = context.Configuration.GetValue<bool>("UseMockData");
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-        // Gọi lệnh load data khi trang được điều hướng tới
-        await ViewModel.LoadProductsAsync();
+                if (useMockData)
+                {
+                    // Mock Mode - No HTTP Clients
+                    services.AddScoped<IAuthRepository, MockAuthRepository>();
+                }
+                else
+                {
+                    // Real API Mode
+                    services.AddTransient<AuthHeaderHandler>();
+                    
+                    // Refit client cho API
+                    services.AddRefitClient<IAuthApi>()
+                        .ConfigureHttpClient(client =>
+                        {
+                            client.BaseAddress = new Uri(AppConfig.Instance.ApiBaseUrl);
+                            client.Timeout = TimeSpan.FromSeconds(AppConfig.Instance.RequestTimeoutSeconds);
+                        })
+                        .AddHttpMessageHandler<AuthHeaderHandler>();
+                    
+                    services.AddScoped<IAuthRepository, AuthRepository>();
+                }
+
+                // Services
+                services.AddSingleton<INavigationService, NavigationService>();
+                services.AddTransient<IToastHelper, ToastHelper>();
+                services.AddSingleton<IValidationService, ValidationService>();
+
+                // Strategies
+                services.AddSingleton<IRoleStrategy, AdminDashboardStrategy>();
+                services.AddSingleton<IRoleStrategy, SalesmanDashboardStrategy>();
+                services.AddSingleton<IRoleStrategy, CustomerDashboardStrategy>();
+                services.AddSingleton<IRoleStrategyFactory, RoleStrategyFactory>();
+
+                // ViewModels
+                services.AddTransient<ViewModels.Auth.LoginViewModel>();
+                services.AddTransient<ViewModels.Auth.RegisterViewModel>();
+                services.AddTransient<ViewModels.Dashboard.AdminDashboardViewModel>();
+                services.AddTransient<ViewModels.Dashboard.CustomerDashboardViewModel>();
+                services.AddTransient<ViewModels.Dashboard.SalesmanDashboardViewModel>();
+            })
+            .Build();
     }
 }
 ```
 
-#### 4.3.6. MVVM Toolkit Usage
+**3. Sử dụng trong View Code-Behind:**
+
+```csharp
+// File: src/MyShop.Client/Views/Auth/LoginPage.xaml.cs
+public sealed partial class LoginPage : Page
+{
+    public LoginViewModel ViewModel { get; }
+
+    public LoginPage()
+    {
+        this.InitializeComponent();
+        
+        // Resolve ViewModel từ DI container
+        ViewModel = App.Current.Services.GetRequiredService<LoginViewModel>();
+        this.DataContext = ViewModel;
+    }
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        // Clear password khi navigate đến page (security)
+        ViewModel.Password = string.Empty;
+    }
+}
+```
+
+**Đặc điểm quan trọng:**
+
+- Sử dụng **IHost** từ Microsoft.Extensions.Hosting (modern approach).
+- Configuration được load từ JSON file (`ApiConfig.json`).
+- Hỗ trợ **Mock Mode** và **Real API Mode** qua configuration.
+- Sử dụng **Refit** để tạo HTTP client type-safe.
+- **AuthHeaderHandler** tự động inject JWT token vào requests.
+- Strategy Pattern được đăng ký và managed bởi DI.
+
+#### 4.3.6. Repository Pattern & API Client
+
+#### Repository Pattern (Frontend)
+
+Trong frontend, chúng ta áp dụng **Repository Pattern** để:
+- Tách biệt logic gọi API khỏi ViewModel.
+- Dễ dàng switch giữa Real API và Mock data.
+- Xử lý errors và mapping responses tập trung.
+
+**Cấu trúc:**
+
+```
+Core/
+└─ Repositories/
+    ├─ Interfaces/
+    │  └─ IAuthRepository.cs
+    └─ Implementations/
+       ├─ AuthRepository.cs        # Real API implementation
+       └─ MockAuthRepository.cs    # Mock data implementation
+```
+
+**Interface:**
+
+```csharp
+public interface IAuthRepository
+{
+    Task<ApiResult<User>> LoginAsync(string username, string password);
+    Task<ApiResult<User>> RegisterAsync(CreateUserRequest request);
+    Task<ApiResult<User>> GetCurrentUserAsync();
+}
+```
+
+**Real Implementation với Refit:**
+
+```csharp
+public class AuthRepository : IAuthRepository
+{
+    private readonly IAuthApi _authApi;
+
+    public AuthRepository(IAuthApi authApi)
+    {
+        _authApi = authApi;
+    }
+
+    public async Task<ApiResult<User>> LoginAsync(string username, string password)
+    {
+        try
+        {
+            var request = new LoginRequest 
+            { 
+                UsernameOrEmail = username, 
+                Password = password 
+            };
+            
+            var response = await _authApi.LoginAsync(request);
+            
+            if (response.Success && response.Result != null)
+            {
+                // Map LoginResponse DTO sang User domain model
+                var user = MapToUser(response.Result);
+                return ApiResult<User>.Success(user);
+            }
+            
+            return ApiResult<User>.Failure(response.Message);
+        }
+        catch (Exception ex)
+        {
+            return ApiResult<User>.Failure($"Login failed: {ex.Message}", ex);
+        }
+    }
+}
+```
+
+#### Refit - Type-Safe HTTP Client
+
+**Refit** được sử dụng để tạo HTTP client type-safe, giảm boilerplate code.
+
+**API Interface:**
+
+```csharp
+// File: src/MyShop.Client/ApiServer/IAuthApi.cs
+public interface IAuthApi
+{
+    [Post("/api/v1/auth/login")]
+    Task<ApiResponse<LoginResponse>> LoginAsync([Body] LoginRequest request);
+    
+    [Post("/api/v1/auth/register")]
+    Task<ApiResponse<CreateUserResponse>> RegisterAsync([Body] CreateUserRequest request);
+    
+    [Get("/api/v1/auth/me")]
+    Task<ApiResponse<UserInfoResponse>> GetCurrentUserAsync();
+}
+```
+
+**Đăng ký Refit trong DI:**
+
+```csharp
+services.AddRefitClient<IAuthApi>()
+    .ConfigureHttpClient(client =>
+    {
+        client.BaseAddress = new Uri(AppConfig.Instance.ApiBaseUrl);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    })
+    .AddHttpMessageHandler<AuthHeaderHandler>(); // Auto add JWT token
+```
+
+**AuthHeaderHandler - Automatic JWT Injection:**
+
+```csharp
+public class AuthHeaderHandler : DelegatingHandler
+{
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request, 
+        CancellationToken cancellationToken)
+    {
+        var token = CredentialHelper.GetToken();
+        
+        if (!string.IsNullOrEmpty(token))
+        {
+            request.Headers.Authorization = 
+                new AuthenticationHeaderValue("Bearer", token);
+        }
+        
+        return await base.SendAsync(request, cancellationToken);
+    }
+}
+```
+
+**Lợi ích:**
+- **Type-safe:** Compile-time checking cho API calls.
+- **Less boilerplate:** Không cần viết HttpClient code thủ công.
+- **Testable:** Dễ dàng mock IAuthApi trong tests.
+- **Automatic serialization:** JSON serialization/deserialization tự động.
+
+---
+
+#### 4.3.7. MVVM Toolkit Usage
 
 #### CommunityToolkit.Mvvm
 
@@ -1693,6 +1987,56 @@ public partial class UserModel : ObservableObject
 ```
 
 Khi `IsActive` thay đổi → UI tự động cập nhật (không cần viết thủ công `OnPropertyChanged`).
+
+---
+
+#### AsyncRelayCommand & Cancellation Support
+
+Để xử lý async operations và hỗ trợ cancellation:
+
+```csharp
+public partial class LoginViewModel : BaseViewModel
+{
+    [RelayCommand(CanExecute = nameof(CanAttemptLogin), IncludeCancelCommand = true)]
+    private async Task AttemptLoginAsync(CancellationToken cancellationToken)
+    {
+        SetLoadingState(true);
+        
+        var result = await _authRepository.LoginAsync(Username, Password);
+        
+        if (result.IsSuccess)
+        {
+            // Handle success
+        }
+        
+        SetLoadingState(false);
+    }
+    
+    private bool CanAttemptLogin() => IsFormValid && !IsLoading;
+}
+```
+
+**Lợi ích:**
+- `[RelayCommand]` tự động tạo `AttemptLoginCommand` và `AttemptLoginCancelCommand`.
+- `CanExecute` tự động disable button khi không hợp lệ.
+- `IncludeCancelCommand = true` cho phép cancel operation.
+
+---
+
+#### NotifyPropertyChangedFor & NotifyCanExecuteChangedFor
+
+Tự động notify các property/command phụ thuộc:
+
+```csharp
+[ObservableProperty]
+[NotifyPropertyChangedFor(nameof(IsFormValid))]
+[NotifyCanExecuteChangedFor(nameof(AttemptLoginCommand))]
+private string _username = string.Empty;
+```
+
+Khi `Username` thay đổi:
+- `IsFormValid` property tự động notify UI.
+- `AttemptLoginCommand` tự động re-evaluate `CanExecute`.
 
 ---
 
@@ -2053,7 +2397,171 @@ Products[0].Stock--;
 
 ---
 
-### 5.5. Factory Pattern _(Frontend: dùng trong tạo ViewModel hoặc Dialog)_
+### 5.5. Strategy Pattern (Frontend - Role-Based Navigation)
+
+**[PHÂN CÔNG: FRONTEND DEVELOPER]**
+
+#### **Mục đích**
+
+Strategy Pattern được sử dụng để xử lý logic khác nhau cho từng user role mà không cần sử dụng nhiều if-else hoặc switch statements rải rác trong code.
+
+- **Tách biệt logic theo role:** Mỗi role có một strategy riêng định nghĩa dashboard page và permissions.
+- **Dễ mở rộng:** Thêm role mới chỉ cần tạo strategy mới, không ảnh hưởng code cũ.
+- **Open/Closed Principle:** Open for extension, closed for modification.
+
+---
+
+#### **Implementation**
+
+**1. Strategy Interface:**
+
+```csharp
+// File: src/MyShop.Client/Core/Strategies/IRoleStrategy.cs
+public interface IRoleStrategy
+{
+    Type GetDashboardPageType();
+    bool CanAccessFeature(string featureName);
+    string GetRoleName();
+}
+```
+
+**2. Concrete Strategies:**
+
+```csharp
+// AdminDashboardStrategy.cs
+public class AdminDashboardStrategy : IRoleStrategy
+{
+    public Type GetDashboardPageType() => typeof(AdminDashboardPage);
+    
+    public bool CanAccessFeature(string featureName) => true; // Full access
+    
+    public string GetRoleName() => "Administrator";
+}
+
+// SalesmanDashboardStrategy.cs
+public class SalesmanDashboardStrategy : IRoleStrategy
+{
+    public Type GetDashboardPageType() => typeof(SalesmanDashboardPage);
+    
+    public bool CanAccessFeature(string featureName)
+    {
+        // Limited features
+        return featureName switch
+        {
+            "ViewProducts" => true,
+            "CreateOrder" => true,
+            "ManageUsers" => false,
+            "ViewReports" => false,
+            _ => false
+        };
+    }
+    
+    public string GetRoleName() => "Sales Agent";
+}
+
+// CustomerDashboardStrategy.cs
+public class CustomerDashboardStrategy : IRoleStrategy
+{
+    public Type GetDashboardPageType() => typeof(CustomerDashboardPage);
+    
+    public bool CanAccessFeature(string featureName)
+    {
+        // Very limited features
+        return featureName switch
+        {
+            "ViewProducts" => true,
+            "ViewOrders" => true,
+            _ => false
+        };
+    }
+    
+    public string GetRoleName() => "Customer";
+}
+```
+
+**3. Strategy Factory:**
+
+```csharp
+// File: src/MyShop.Client/Core/Strategies/RoleStrategyFactory.cs
+public class RoleStrategyFactory : IRoleStrategyFactory
+{
+    private readonly IEnumerable<IRoleStrategy> _strategies;
+    
+    public RoleStrategyFactory(IEnumerable<IRoleStrategy> strategies)
+    {
+        _strategies = strategies;
+    }
+    
+    public IRoleStrategy GetStrategy(UserRole role)
+    {
+        return role switch
+        {
+            UserRole.Admin => _strategies.OfType<AdminDashboardStrategy>().First(),
+            UserRole.Salesman => _strategies.OfType<SalesmanDashboardStrategy>().First(),
+            UserRole.Customer => _strategies.OfType<CustomerDashboardStrategy>().First(),
+            _ => throw new ArgumentException($"Unknown role: {role}")
+        };
+    }
+}
+```
+
+**4. Sử dụng trong ViewModel:**
+
+```csharp
+// LoginViewModel.cs
+public partial class LoginViewModel : BaseViewModel
+{
+    private readonly IRoleStrategyFactory _roleStrategyFactory;
+    private readonly INavigationService _navigationService;
+    
+    [RelayCommand]
+    private async Task AttemptLoginAsync()
+    {
+        var result = await _authRepository.LoginAsync(Username, Password);
+        
+        if (result.IsSuccess && result.Data != null)
+        {
+            var user = result.Data;
+            
+            // Sử dụng Strategy Pattern
+            var primaryRole = user.GetPrimaryRole();
+            var strategy = _roleStrategyFactory.GetStrategy(primaryRole);
+            
+            // Navigate đến dashboard tương ứng
+            var pageType = strategy.GetDashboardPageType();
+            _navigationService.NavigateTo(pageType, user);
+            
+            _toastHelper.ShowSuccess($"Welcome back, {strategy.GetRoleName()}!");
+        }
+    }
+}
+```
+
+**5. Đăng ký trong DI:**
+
+```csharp
+// Bootstrapper.cs
+services.AddSingleton<IRoleStrategy, AdminDashboardStrategy>();
+services.AddSingleton<IRoleStrategy, SalesmanDashboardStrategy>();
+services.AddSingleton<IRoleStrategy, CustomerDashboardStrategy>();
+services.AddSingleton<IRoleStrategyFactory, RoleStrategyFactory>();
+```
+
+---
+
+#### **Lợi ích**
+
+| Lợi ích | Giải thích |
+|---------|-----------|
+| **Tách biệt logic role** | Mỗi role có class riêng, không lẫn lộn code. |
+| **Dễ mở rộng** | Thêm role mới không cần sửa code cũ. |
+| **Testable** | Có thể test từng strategy độc lập. |
+| **Áp dụng SOLID** | Tuân theo Open/Closed và Single Responsibility. |
+| **Giảm if-else** | Thay vì nhiều if-else rải rác, logic tập trung trong strategies. |
+
+---
+
+### 5.6. Factory Pattern _(Frontend: dùng trong tạo ViewModel hoặc Dialog)_
 
 **Mục đích:**
 Tạo ra các đối tượng (ViewModel, Dialog, hoặc API service) mà không cần lộ cách khởi tạo cụ thể.
@@ -2096,7 +2604,7 @@ public class ViewModelFactory : IViewModelFactory
 
 ---
 
-### 5.6. Dependency Injection Pattern (Frontend: WinUI + Refit Services)
+### 5.7. Dependency Injection Pattern (Frontend: WinUI + Refit Services)
 
 **Mục đích:**
 Cung cấp dependency (như `ApiClient`, `NavigationService`, `DialogService`) cho các ViewModel mà **không cần khởi tạo trực tiếp**.
@@ -2136,7 +2644,7 @@ public partial class App : Application
 
 ---
 
-### 5.7. State Pattern _(Frontend: cho Login, Role, Theme, hoặc Navigation State)_
+### 5.8. State Pattern _(Frontend: cho Login, Role, Theme, hoặc Navigation State)_
 
 **Mục đích:**
 Cho phép hệ thống **thay đổi hành vi động** khi trạng thái ứng dụng thay đổi (user login/logout, role đổi, theme đổi).
@@ -2178,7 +2686,7 @@ public class AuthenticatedState : UserState
 
 ---
 
-### 5.8. Template Method Pattern _(Frontend: trong BaseViewModel và BasePage)_
+### 5.9. Template Method Pattern _(Frontend: trong BaseViewModel và BasePage)_
 
 **Mục đích:**
 Định nghĩa khung xử lý chung cho các ViewModel, cho phép subclass override từng bước cụ thể.
@@ -2216,7 +2724,7 @@ public class ProductsViewModel : BaseViewModel
 
 ---
 
-### 5.9. Adapter Pattern _(Frontend: trong API Layer – Refit mapping)_
+### 5.10. Adapter Pattern _(Frontend: trong API Layer – Refit mapping)_
 
 **Mục đích:**
 Chuyển đổi dữ liệu từ tầng API (DTO) sang Model nội bộ của ViewModel mà không làm thay đổi logic gọi API.
@@ -2255,7 +2763,7 @@ public class ProductAdapter
 
 ---
 
-### 5.10. Strategy Pattern (AI)
+### 5.11. Strategy Pattern (AI)
 
 **[PHÂN CÔNG: AI DEVELOPER]**
 
