@@ -10,7 +10,7 @@
 | --- | ------------------- | -------- | -------------------------- | ----------------------------- | ----------------------------------------------------------------------------------- |
 | 1   | Nguyễn Hưng Thịnh   | 23120200 | Backend Developer          | nguyenhungthinha1@gmail.com   | [oppaii230205](https://github.com/oppaii230205)                                     |
 | 2   | Lê Thành Công       | 23120222 | Leader / Backend Developer | ltchcmus@gmail.com            | [ltchcmus](https://github.com/ltchcmus) / [05-victor](https://github.com/05-victor) |
-| 3   | Lê Tấn Hiệp         | 23120255 | Frontend Developer         | tanhiep24135@gmail.com        | [github]                                                                            |
+| 3   | Lê Tấn Hiệp         | 23120255 | Frontend Developer         | tanhiep24135@gmail.com        | [ThachHaoo](https://github.com/ThachHaoo)                                                                            |
 | 4   | Tống Dương Thái Hòa | 23120262 | Frontend Developer         | tdthoa.hry@gmai.com           | [henry-banana](https://github.com/henry-banana)                                     |
 | 5   | Nguyễn Huy Hoàng    | 23122031 | AI Developer               | 23122031@student.hcmus.edu.vn | [Link](https://github.com/hhlearntocode)                                            |
 
@@ -252,11 +252,14 @@ Login → Detect Role
 
 - Hai layout song song (Login – Register), sử dụng gradient nền WinUI 3:
   - Login: xanh navy `#1A4D8F → #2563EB`
-  - Register: xanh ngọc `#10B981 → #00AEEF`
+  - Register: xanh lá `#10B981 → #0ace0dff`
 - Giao diện card bo tròn, bóng đổ mềm, sử dụng Inter/Roboto.
 - Login gồm: Username/Email, Password, Remember me, nút “Sign In” và “Sign in with Google”.
 - Register gồm: Username, Email, Phone, Password, Confirm Password, Role (Customer/SalesAgent).
 - Có liên kết cấu hình server “⚙ Configure Server” ở góc dưới trái.
+- Ảnh mô tả:
+![temp (18)](https://hackmd.io/_uploads/r1LW_y7JWg.png)
+![temp (19)](https://hackmd.io/_uploads/rJLb_17ybe.png)
 
 **Màn hình trang chủ**
 
@@ -266,41 +269,134 @@ Login → Detect Role
 - Có các filter cơ bản: Tên, Loại, Khoảng giá, Sort theo Giá / Rating.
 - Nút “Add to Cart” với hover animation.
 
+![temp (4)](https://hackmd.io/_uploads/Sy5OukQy-x.png)
+
 **Màn hình sản phẩm**
 
 - Lưới sản phẩm đầy đủ thông tin: hình, tên, giá, rating, trạng thái tồn kho.
 - Bộ lọc đầu trang: Tìm kiếm, Loại hàng, Khoảng giá, Sắp xếp.
 - Có nút “View Details” mở modal chi tiết sản phẩm.
+![temp (5)](https://hackmd.io/_uploads/BkIY_ymJWg.png)
 
 **Màn hình giỏ hàng**
 
-- Bảng hiển thị danh sách sản phẩm trong giỏ:
-  | Hình | Tên sản phẩm | Số lượng | Đơn giá | Thành tiền | Xóa |
+- Bảng hiển thị danh sách sản phẩm trong giỏ.
 - Tổng giá trị, thuế, phí vận chuyển, và tổng đơn hàng.
 - Nút **Proceed to Checkout** → hiển thị modal xác nhận.
+![temp (6)](https://hackmd.io/_uploads/ryxcuymkZl.png)
 
 #### 2.2.2. Admin Dashboard Flow (Focus chính)
 
 - **Dashboard Overview**
-  - [Mô tả chi tiết dashboard admin]
-  - [Các widget thống kê]
-  - [Biểu đồ và báo cáo]
-- **Quản lý sản phẩm**
-  - [Giao diện CRUD sản phẩm]
-- **Quản lý đơn hàng**
-  - [Giao diện quản lý đơn hàng]
-    ...
+  - Bố cục 2 cột: Sidebar trái (NavigationView) + nội dung phải với lưới nhiều cột.
+  - KPI Cards (hàng trên):
+    - Hôm nay: Doanh thu (đơn vị VND), Số đơn hàng, Khách hàng hoạt động, Sản phẩm sắp hết hàng (< 10)
+    - Mỗi card có icon, trend vs. ngày hôm qua, tooltip chi tiết.
+  - Biểu đồ chính (hàng giữa):
+    - Doanh thu theo thời gian (Line chart: ngày/tuần/tháng)
+    - Phân bổ doanh thu theo danh mục (Donut/Pie)
+    - Top 5 sản phẩm theo doanh thu hoặc rating (Bar chart)
+    - Tình trạng đơn hàng (Stacked area: Pending/Processing/Shipped/Delivered/Canceled)
+  - Bảng “Recent Orders” (hàng dưới): 10 đơn mới nhất với trạng thái (chip màu), tổng tiền, ngày tạo, khách hàng, và nút chi tiết.
+  - Cảnh báo (InfoBar): danh sách sản phẩm Low-stock (< 10) và sản phẩm hết hàng.
+![temp (10)](https://hackmd.io/_uploads/BkK6O17kWe.png)
 
-#### 2.2.3. Salasagent Dasboard Flow
+- **Quản lý sản phẩm**
+  - Danh sách sản phẩm (DataGrid):
+    - Cột: SKU, Tên, Danh mục, Nhãn hàng, Giá, Tồn kho, Rating (1–5), Trạng thái, Hành động (Edit/Delete)
+    - Hỗ trợ chọn nhiều (multi-select) để xóa hàng loạt hoặc xuất dữ liệu.
+  - Bộ lọc & Sắp xếp:
+    - Tên (search box), Thiết bị/Danh mục (ComboBox), Khoảng giá (min–max slider), Rating (>=), Trạng thái (In-stock/Out-of-stock)
+    - Sắp xếp theo Giá ↑/↓, Rating ↑/↓, Số lượng tồn kho ↑/↓
+    - Phân trang: 12/24/48 per page; hiển thị tổng số kết quả.
+  - CRUD Dialogs (ContentDialog):
+    - Thêm/Sửa sản phẩm: Tên, Mô tả, Danh mục, Nhãn hàng, Giá, Ảnh, Tồn kho ban đầu, Thuộc tính mở rộng.
+    - Upload ảnh: xem trước (preview), kiểm tra định dạng và kích thước.
+    - Xác nhận xóa: yêu cầu xác nhận 2 bước nếu sản phẩm có đơn hàng liên quan.
+  - Xuất dữ liệu: CSV/Excel; hỗ trợ bộ lọc hiện tại.
+  - Nhanh: Tab “Sắp hết hàng” liệt kê các sản phẩm có tồn < 10 để ưu tiên nhập hàng.
+![temp (11)](https://hackmd.io/_uploads/r1cR_JQkZl.png)
+
+- **Quản lý đơn hàng**
+  - Danh sách đơn (DataGrid):
+    - Cột: Mã đơn, Khách hàng, Số mặt hàng, Tổng tiền, Trạng thái (chip), Thanh toán, Ngày tạo, Hành động
+  - Lọc & Tìm kiếm:
+    - Tên khách hàng / Mã đơn, Sản phẩm, Trạng thái, Khoảng ngày (DateRange), Phương thức thanh toán
+  - Hover doanh thu: di chuột vào tổng tiền hiển thị tooltip breakdown (subtotal, tax, discount, shipping).
+  - Chi tiết đơn: Pane/Modal với danh sách item, địa chỉ giao, timeline trạng thái; cho phép cập nhật trạng thái (Admin).
+  - Thống kê nhanh: tổng đơn hôm nay, tổng doanh thu hôm nay, tỷ lệ hủy.
+![temp (12)](https://hackmd.io/_uploads/By-1ty7kWx.png)
+![temp (13)](https://hackmd.io/_uploads/rka1F17J-e.png)
+
+- **Users**
+  - Danh sách Sales Agent và Khách hàng; tìm kiếm, lọc theo trạng thái.
+  - Hành động: Promote user → SalesAgent, khóa/mở khóa, reset mật khẩu (nếu có chính sách), xem lịch sử hoạt động.
+  - Kích hoạt Admin bằng code (tích hợp External API) với ContentDialog nhập mã.
+![temp (14)](https://hackmd.io/_uploads/rJFgK17k-l.png)
+![temp (15)](https://hackmd.io/_uploads/Hk1bFkQyZe.png)
+
+- **Settings**
+  - Cấu hình máy chủ API (ServerConfigDialog).
+  - Hồ sơ & bảo mật: thay ảnh đại diện, đổi mật khẩu, bật xác thực email nếu chưa xác thực.
+
+![temp (17)](https://hackmd.io/_uploads/S19VKJ7J-e.png)
+![temp21](https://hackmd.io/_uploads/S1vQt1Q1be.png)
+
+#### 2.2.3. Sales Agent Dashboard Flow
 
 - **Dashboard Overview**
-- Mô tả
-  ...
+  - KPI cá nhân: Doanh thu từ affiliate, Số click link, Tỉ lệ chuyển đổi, Hoa hồng chờ duyệt.
+  - Biểu đồ hiệu suất theo thời gian (doanh thu/đơn hàng từ link), top sản phẩm mang lại doanh thu.
+  - Bảng đơn hàng phát sinh từ affiliate (read-only), cho phép xem chi tiết nhưng không chỉnh sửa.
+![temp (20)](https://hackmd.io/_uploads/ryv_F1XJbg.png)
+
+- **Công cụ Affiliate**
+  - Tạo link affiliate theo sản phẩm, copy nhanh, hiển thị QR.
+  - Theo dõi hiệu suất theo link: click, add-to-cart, purchase, commission dự kiến.
+![temp (21)](https://hackmd.io/_uploads/SyTuFJXJbl.png)
+![temp (22)](https://hackmd.io/_uploads/SkUYF1X1bx.png)
+
+- **Sản phẩm & Đơn hàng (quyền hạn hạn chế)**
+  - Xem danh sách sản phẩm, bộ lọc cơ bản (tên, danh mục, khoảng giá, rating).
+  - Xem danh sách đơn hàng liên quan; không có quyền xóa/sửa đơn hoặc chỉnh tồn kho.
+![temp (23)](https://hackmd.io/_uploads/By9FFkmJ-l.png)
+
+- **Hồ sơ**
+  - Cập nhật thông tin cá nhân cơ bản, xem tổng hoa hồng, yêu cầu rút.
+![temp (3)](https://hackmd.io/_uploads/B14oFkX1-g.png)
 
 ### 2.3. User Experience (UX)
 
-- [Mô tả về trải nghiệm người dùng]
-- [Nguyên tắc thiết kế đã áp dụng]
+- **Nguyên tắc thiết kế**
+  - Rõ ràng, nhất quán, tối giản; nhấn mạnh phân cấp thị giác (KPI → biểu đồ → bảng).
+  - Sử dụng màu nền gradient cho Auth (Login: `#1A4D8F → #2563EB`, Register: `#10B981 → #00ef08ff`) và accent đồng bộ trong app.
+  - Typography: Inter/Roboto, cỡ chữ theo scale 12/14/16/20/24/32.
+
+- **Điều hướng & Bố cục**
+  - NavigationView (sidebar) cố định cho Dashboard; CommandBar ngữ cảnh (thêm/sửa/xuất/lọc).
+  - Breadcrumbs ở phần tiêu đề trang cho luồng sâu (Orders → Order #12345).
+  - Tìm kiếm nhanh (Ctrl+K) mở hộp tìm kiếm toàn cục (dự kiến).
+
+- **Trạng thái & Phản hồi**
+  - Loading: Skeleton cho bảng/thẻ; ProgressRing cho hành động.
+  - Empty state: mô tả ngắn + nút hành động (VD: “Chưa có sản phẩm, Thêm sản phẩm mới”).
+  - Lỗi: InfoBar đỏ với chi tiết có thể copy; toast thông báo thành công/thất bại.
+  - Xác thực Form: inline validation, lỗi tập trung ở đầu dialog nếu nhiều trường.
+
+- **Khả năng truy cập (A11y)**
+  - Tương phản màu đủ (WCAG AA), Focus visible, hỗ trợ phím tắt cho hành động phổ biến.
+  - Trật tự Tab hợp lý; hỗ trợ Narrator cho các phần tử có trạng thái (chips, badges).
+
+- **Responsive/Windowing**
+  - Thiết kế tối ưu cho ≥1280px; thích ứng 1024px/800px: lưới sản phẩm 4→3→2 cột; bảng co giãn, ẩn cột ít quan trọng.
+  - Min window size đề xuất: 1024×700; hỗ trợ Maximize/Restore mượt.
+
+- **Hiệu năng**
+  - Ảo hóa danh sách/bảng; phân trang 12/24/48; trì hoãn tải ảnh (deferred image loading).
+  - Cache client cho filter gần nhất; chỉ gọi API khi người dùng dừng nhập (debounce 300–500ms).
+
+- **Prototype & Handoff**
+  - Prototype bao phủ: Login, Register, Admin/Customer/Sales Agent Dashboard, Products (list + dialogs), Orders (list + detail), Reports, Users, Settings, Server Config.
 
 ---
 
@@ -1185,67 +1281,85 @@ Tầng này chịu trách nhiệm hoàn toàn về việc tương tác với cơ
 
 #### 4.3.1. Model
 
-#### Data Models
+#### Domain Models
 
 Các lớp **Model** đại diện cho dữ liệu nghiệp vụ chính của hệ thống.
-Mỗi model ánh xạ trực tiếp với các bảng hoặc entity trong cơ sở dữ liệu hoặc API trả về.
+Các models này tách biệt khỏi DTOs từ backend, cho phép frontend có cấu trúc dữ liệu phù hợp với nhu cầu UI.
 
-Cấu trúc thư mục:
+Cấu trúc thư mục thực tế:
 
 ```
-MyShop/
+MyShop.Client/
  ├─ Models/
- │   ├─ ProductModel.cs
- │   ├─ OrderModel.cs
- │   ├─ OrderItemModel.cs
- │   ├─ CategoryModel.cs
- │   ├─ UserModel.cs
- │   ├─ ReportModel.cs
- │   └─ AuthModel.cs
+ │   ├─ User.cs           # Domain model cho User
+ │   └─ Enums/
+ │       └─ UserRole.cs   # Enum định nghĩa các vai trò
 ```
 
-Mẫu:
+**Ví dụ thực tế - User Model:**
 
 ```csharp
-public class ProductModel
+// File: src/MyShop.Client/Models/User.cs
+public class User
 {
-    public int Id { get; set; }
-    public string SKU { get; set; }
-    public string Name { get; set; }
-    public string Category { get; set; }
-    public decimal ImportPrice { get; set; }
-    public decimal SalePrice { get; set; }
-    public int Stock { get; set; }
-    public double Rating { get; set; }
-    public string ImageUrl { get; set; }
+    public Guid Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public bool IsTrialActive { get; set; }
+    public DateTime? TrialStartDate { get; set; }
+    public DateTime? TrialEndDate { get; set; }
+    public bool IsEmailVerified { get; set; }
+    public List<UserRole> Roles { get; set; } = new();
+    public string Token { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Check xem user có role cụ thể không
+    /// </summary>
+    public bool HasRole(UserRole role) => Roles.Contains(role);
+
+    /// <summary>
+    /// Lấy role cao nhất (Admin > Salesman > Customer)
+    /// </summary>
+    public UserRole GetPrimaryRole()
+    {
+        if (Roles.Contains(UserRole.Admin)) return UserRole.Admin;
+        if (Roles.Contains(UserRole.Salesman)) return UserRole.Salesman;
+        return UserRole.Customer;
+    }
 }
 ```
 
-**Đặc điểm để ứng dụng:**
+**UserRole Enum:**
 
-- Thuần dữ liệu, không chứa logic xử lý.
-- Dễ serial hóa/deserial hóa (JSON <-> C# object).
-- Dùng chung cho cả binding và request API.
+```csharp
+// File: src/MyShop.Client/Models/Enums/UserRole.cs
+public enum UserRole
+{
+    Customer = 0,
+    Salesman = 1,
+    Admin = 2
+}
+```
+
+**Đặc điểm:**
+
+- Chứa business logic đơn giản (như `HasRole()`, `GetPrimaryRole()`).
+- Tách biệt khỏi DTOs từ API để UI có cấu trúc dữ liệu phù hợp.
+- Dễ serialize/deserialize khi làm việc với API.
 
 ---
 
-#### API Models
+#### DTOs (Shared với Backend)
 
-Các lớp model trung gian được thiết kế để mapping dữ liệu giữa API và UI.
-Mẫu:
+Dự án sử dụng **MyShop.Shared** project chứa các DTOs được dùng chung giữa Client và Server.
+Các DTOs này được truyền qua API và được map sang Domain Models khi cần.
 
-```csharp
-public class ProductResponse
-{
-    public List<ProductModel> Data { get; set; }
-    public int TotalCount { get; set; }
-    public int CurrentPage { get; set; }
-}
-```
-
-- Tách biệt rõ dữ liệu hiển thị (`ProductModel`) và dữ liệu phản hồi (`ProductResponse`).
-- Giúp xử lý dễ hơn với phân trang, lọc, và response meta-data.
-- Được định nghĩa trong `Models/API/` để dễ mở rộng.
+**Lợi ích:**
+- Đảm bảo tính nhất quán dữ liệu giữa Client và Server.
+- Giảm thiểu lỗi do cấu trúc dữ liệu không khớp.
+- Tách biệt rõ ràng giữa API contract (DTOs) và Domain logic (Models).
 
 ---
 
@@ -1334,56 +1448,114 @@ Ngược lại, nếu ViewModel thay đổi, UI cũng tự động phản ánh l
 
 Mỗi trang (View) có ViewModel tương ứng trong thư mục `ViewModels/`.
 
-Cấu trúc:
+Cấu trúc thực tế:
 
 ```
 ViewModels/
- ├─ DashboardViewModel.cs
- ├─ ProductsViewModel.cs
- ├─ OrdersViewModel.cs
- ├─ ReportsViewModel.cs
- ├─ UsersViewModel.cs
- ├─ SettingsViewModel.cs
- ├─ LoginViewModel.cs
- └─ RegisterViewModel.cs
+ ├─ Auth/
+ │   ├─ LoginViewModel.cs
+ │   └─ RegisterViewModel.cs
+ ├─ Dashboard/
+ │   ├─ AdminDashboardViewModel.cs
+ │   ├─ SalesmanDashboardViewModel.cs
+ │   └─ CustomerDashboardViewModel.cs
+ └─ Base/
+     └─ BaseViewModel.cs
 ```
 
 **Chức năng chính:**
 
-- Chứa logic xử lý UI (fetch API, validate, filter, sort, paging).
-- Giữ trạng thái của trang (selected item, filters, loading, error…).
+- Chứa logic xử lý UI (gọi Repository/Service, validate, xử lý state).
+- Giữ trạng thái của trang (loading, error, data collection).
 - Không thao tác trực tiếp với UI (chỉ thông qua Binding).
+- Sử dụng **Dependency Injection** để nhận services.
 
-Mẫu:
+**Ví dụ thực tế - LoginViewModel:**
 
 ```csharp
-public partial class ProductsViewModel : ObservableObject
+// File: src/MyShop.Client/ViewModels/Auth/LoginViewModel.cs
+public partial class LoginViewModel : BaseViewModel
 {
-    private readonly ApiClient _api;
+    private readonly IAuthRepository _authRepository;
+    private readonly INavigationService _navigationService;
+    private readonly IToastHelper _toastHelper;
+    private readonly IRoleStrategyFactory _roleStrategyFactory;
+    private readonly IValidationService _validationService;
 
     [ObservableProperty]
-    private ObservableCollection<ProductModel> products;
+    [NotifyPropertyChangedFor(nameof(IsFormValid))]
+    [NotifyCanExecuteChangedFor(nameof(AttemptLoginCommand))]
+    private string _username = string.Empty;
 
     [ObservableProperty]
-    private string searchKeyword;
+    [NotifyPropertyChangedFor(nameof(IsFormValid))]
+    [NotifyCanExecuteChangedFor(nameof(AttemptLoginCommand))]
+    private string _password = string.Empty;
 
-    public IRelayCommand SearchCommand { get; }
+    [ObservableProperty]
+    private string _usernameError = string.Empty;
 
-    public ProductsViewModel(ApiClient api)
+    [ObservableProperty]
+    private string _passwordError = string.Empty;
+
+    public bool IsFormValid => 
+        string.IsNullOrWhiteSpace(UsernameError) && 
+        string.IsNullOrWhiteSpace(PasswordError) && 
+        !string.IsNullOrWhiteSpace(Username) && 
+        !string.IsNullOrWhiteSpace(Password);
+
+    public LoginViewModel(
+        IAuthRepository authRepository,
+        INavigationService navigationService,
+        IToastHelper toastHelper,
+        IRoleStrategyFactory roleStrategyFactory,
+        IValidationService validationService)
     {
-        _api = api;
-        Products = new ObservableCollection<ProductModel>();
-        SearchCommand = new RelayCommand(async () => await SearchProducts());
+        _authRepository = authRepository;
+        _navigationService = navigationService;
+        _toastHelper = toastHelper;
+        _roleStrategyFactory = roleStrategyFactory;
+        _validationService = validationService;
     }
 
-    private async Task SearchProducts()
+    [RelayCommand(CanExecute = nameof(CanAttemptLogin))]
+    private async Task AttemptLoginAsync(CancellationToken cancellationToken)
     {
-        var data = await _api.GetProductsAsync(searchKeyword);
-        Products.Clear();
-        foreach (var p in data) Products.Add(p);
+        if (!ValidateInput()) return;
+        
+        SetLoadingState(true);
+        
+        var result = await _authRepository.LoginAsync(Username.Trim(), Password);
+        
+        if (result.IsSuccess && result.Data != null)
+        {
+            var user = result.Data;
+            
+            // Sử dụng Strategy Pattern để navigate
+            var primaryRole = user.GetPrimaryRole();
+            var strategy = _roleStrategyFactory.GetStrategy(primaryRole);
+            var pageType = strategy.GetDashboardPageType();
+            
+            _navigationService.NavigateTo(pageType, user);
+        }
+        else
+        {
+            SetError(result.ErrorMessage ?? "Login failed.");
+        }
+        
+        SetLoadingState(false);
     }
 }
 ```
+
+**Đặc điểm quan trọng:**
+
+- Sử dụng `[ObservableProperty]` để tự động sinh PropertyChanged.
+- Sử dụng `[NotifyPropertyChangedFor]` để notify các property phụ thuộc.
+- Sử dụng `[RelayCommand]` để tạo ICommand từ method.
+- Inject dependencies qua constructor (IAuthRepository, INavigationService, v.v.).
+- Sử dụng **Repository Pattern** thay vì gọi API trực tiếp.
+- Áp dụng **Strategy Pattern** cho role-based navigation.
 
 ---
 
@@ -1425,7 +1597,338 @@ public ObservableCollection<ProductModel> Products { get; set; }
 
 ---
 
-#### 4.3.4. MVVM Toolkit Usage
+#### 4.3.4. Core & Helper Services
+
+Đây là các lớp logic nghiệp vụ hoặc hỗ trợ, độc lập với UI. Chúng được quản lý bởi **Dependency Injection** và inject vào ViewModels. Chúng được tổ chức trong các thư mục `Core` (cho nghiệp vụ chính) và `Helpers` (cho các tiện ích hỗ trợ).
+
+Cấu trúc thư mục:
+```
+MyShop.Client/  
+├─ Core/  
+│  ├─ Services/  
+│  ├─ Repositories/  
+│  └─ ...  
+└─ Helpers/
+   ├─ INavigationService.cs     
+   ├─ NavigationService.cs     
+   ├─ IToastHelper.cs     
+   ├─ ToastHelper.cs     
+   └─ AuthHeaderHandler.cs
+```
+
+Vai trò:
+
+- Tách biệt logic: ViewModel không biết cách điều hướng hay cách hiển thị toast. Nó chỉ yêu cầu service thực hiện.
+- Dễ bảo trì: Thay đổi logic điều hướng (VD: thêm animation) chỉ cần sửa ở `NavigationService`, không ảnh hưởng ViewModel.
+- Dễ kiểm thử (Testable): Có thể mock `INavigationService` để unit test ViewModel.
+
+---
+
+#### Các Services/Helpers chính
+
+- INavigationService (trong `Helpers`): Chịu trách nhiệm điều hướng giữa các Page.
+- IToastHelper (trong `Helpers`): Đóng gói logic hiển thị thông báo (toast, dialog lỗi) thống nhất.
+- IProductService: Một service nghiệp vụ, chịu trách nhiệm gọi ApiClient để lấy/cập nhật dữ liệu sản phẩm, xử lý lỗi mạng, caching, v.v.
+
+---
+
+#### 4.3.5. Dependency Injection (DI)
+
+Dự án sử dụng **Microsoft.Extensions.Hosting** và **Microsoft.Extensions.DependencyInjection** để quản lý DI.
+Việc cấu hình DI được tách riêng trong **Bootstrapper.cs** để code sạch hơn.
+
+#### Cấu hình DI
+
+**1. App.xaml.cs - Entry Point:**
+
+```csharp
+// File: src/MyShop.Client/App.xaml.cs
+public partial class App : Application
+{
+    private readonly IHost _host;
+    public new static App Current => (App)Application.Current;
+    public IServiceProvider Services => _host.Services;
+    public static MainWindow? MainWindow { get; private set; }
+
+    public App()
+    {
+        this.InitializeComponent();
+        _host = Bootstrapper.CreateHost(); // Tạo host với DI configuration
+    }
+
+    protected override async void OnLaunched(LaunchActivatedEventArgs args)
+    {
+        MainWindow = new MainWindow();
+        
+        var navigationService = Services.GetRequiredService<INavigationService>();
+        navigationService.Initialize(MainWindow.RootFrame);
+        
+        // Auto-login nếu có token
+        var token = CredentialHelper.GetToken();
+        if (!string.IsNullOrEmpty(token))
+        {
+            var authRepository = Services.GetRequiredService<IAuthRepository>();
+            var result = await authRepository.GetCurrentUserAsync();
+            
+            if (result.IsSuccess && result.Data != null)
+            {
+                // Navigate đến dashboard tương ứng với role
+                var roleStrategyFactory = Services.GetRequiredService<IRoleStrategyFactory>();
+                var strategy = roleStrategyFactory.GetStrategy(result.Data.GetPrimaryRole());
+                navigationService.NavigateTo(strategy.GetDashboardPageType(), result.Data);
+            }
+            else
+            {
+                navigationService.NavigateTo(typeof(LoginPage));
+            }
+        }
+        else
+        {
+            navigationService.NavigateTo(typeof(LoginPage));
+        }
+        
+        MainWindow.Activate();
+    }
+}
+```
+
+**2. Bootstrapper.cs - DI Configuration:**
+
+```csharp
+// File: src/MyShop.Client/Core/Config/Bootstrapper.cs
+public static class Bootstrapper
+{
+    public static IHost CreateHost()
+    {
+        return Host.CreateDefaultBuilder()
+            .ConfigureAppConfiguration((context, config) =>
+            {
+                config.SetBasePath(AppContext.BaseDirectory);
+                config.AddJsonFile("ApiServer/ApiConfig.json", optional: false, reloadOnChange: true);
+            })
+            .ConfigureServices((context, services) =>
+            {
+                // Load configuration
+                AppConfig.Instance.LoadFromConfiguration(context.Configuration);
+                var useMockData = context.Configuration.GetValue<bool>("UseMockData");
+
+                if (useMockData)
+                {
+                    // Mock Mode - No HTTP Clients
+                    services.AddScoped<IAuthRepository, MockAuthRepository>();
+                }
+                else
+                {
+                    // Real API Mode
+                    services.AddTransient<AuthHeaderHandler>();
+                    
+                    // Refit client cho API
+                    services.AddRefitClient<IAuthApi>()
+                        .ConfigureHttpClient(client =>
+                        {
+                            client.BaseAddress = new Uri(AppConfig.Instance.ApiBaseUrl);
+                            client.Timeout = TimeSpan.FromSeconds(AppConfig.Instance.RequestTimeoutSeconds);
+                        })
+                        .AddHttpMessageHandler<AuthHeaderHandler>();
+                    
+                    services.AddScoped<IAuthRepository, AuthRepository>();
+                }
+
+                // Services
+                services.AddSingleton<INavigationService, NavigationService>();
+                services.AddTransient<IToastHelper, ToastHelper>();
+                services.AddSingleton<IValidationService, ValidationService>();
+
+                // Strategies
+                services.AddSingleton<IRoleStrategy, AdminDashboardStrategy>();
+                services.AddSingleton<IRoleStrategy, SalesmanDashboardStrategy>();
+                services.AddSingleton<IRoleStrategy, CustomerDashboardStrategy>();
+                services.AddSingleton<IRoleStrategyFactory, RoleStrategyFactory>();
+
+                // ViewModels
+                services.AddTransient<ViewModels.Auth.LoginViewModel>();
+                services.AddTransient<ViewModels.Auth.RegisterViewModel>();
+                services.AddTransient<ViewModels.Dashboard.AdminDashboardViewModel>();
+                services.AddTransient<ViewModels.Dashboard.CustomerDashboardViewModel>();
+                services.AddTransient<ViewModels.Dashboard.SalesmanDashboardViewModel>();
+            })
+            .Build();
+    }
+}
+```
+
+**3. Sử dụng trong View Code-Behind:**
+
+```csharp
+// File: src/MyShop.Client/Views/Auth/LoginPage.xaml.cs
+public sealed partial class LoginPage : Page
+{
+    public LoginViewModel ViewModel { get; }
+
+    public LoginPage()
+    {
+        this.InitializeComponent();
+        
+        // Resolve ViewModel từ DI container
+        ViewModel = App.Current.Services.GetRequiredService<LoginViewModel>();
+        this.DataContext = ViewModel;
+    }
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        // Clear password khi navigate đến page (security)
+        ViewModel.Password = string.Empty;
+    }
+}
+```
+
+**Đặc điểm quan trọng:**
+
+- Sử dụng **IHost** từ Microsoft.Extensions.Hosting (modern approach).
+- Configuration được load từ JSON file (`ApiConfig.json`).
+- Hỗ trợ **Mock Mode** và **Real API Mode** qua configuration.
+- Sử dụng **Refit** để tạo HTTP client type-safe.
+- **AuthHeaderHandler** tự động inject JWT token vào requests.
+- Strategy Pattern được đăng ký và managed bởi DI.
+
+#### 4.3.6. Repository Pattern & API Client
+
+#### Repository Pattern (Frontend)
+
+Trong frontend, chúng ta áp dụng **Repository Pattern** để:
+- Tách biệt logic gọi API khỏi ViewModel.
+- Dễ dàng switch giữa Real API và Mock data.
+- Xử lý errors và mapping responses tập trung.
+
+**Cấu trúc:**
+
+```
+Core/
+└─ Repositories/
+    ├─ Interfaces/
+    │  └─ IAuthRepository.cs
+    └─ Implementations/
+       ├─ AuthRepository.cs        # Real API implementation
+       └─ MockAuthRepository.cs    # Mock data implementation
+```
+
+**Interface:**
+
+```csharp
+public interface IAuthRepository
+{
+    Task<ApiResult<User>> LoginAsync(string username, string password);
+    Task<ApiResult<User>> RegisterAsync(CreateUserRequest request);
+    Task<ApiResult<User>> GetCurrentUserAsync();
+}
+```
+
+**Real Implementation với Refit:**
+
+```csharp
+public class AuthRepository : IAuthRepository
+{
+    private readonly IAuthApi _authApi;
+
+    public AuthRepository(IAuthApi authApi)
+    {
+        _authApi = authApi;
+    }
+
+    public async Task<ApiResult<User>> LoginAsync(string username, string password)
+    {
+        try
+        {
+            var request = new LoginRequest 
+            { 
+                UsernameOrEmail = username, 
+                Password = password 
+            };
+            
+            var response = await _authApi.LoginAsync(request);
+            
+            if (response.Success && response.Result != null)
+            {
+                // Map LoginResponse DTO sang User domain model
+                var user = MapToUser(response.Result);
+                return ApiResult<User>.Success(user);
+            }
+            
+            return ApiResult<User>.Failure(response.Message);
+        }
+        catch (Exception ex)
+        {
+            return ApiResult<User>.Failure($"Login failed: {ex.Message}", ex);
+        }
+    }
+}
+```
+
+#### Refit - Type-Safe HTTP Client
+
+**Refit** được sử dụng để tạo HTTP client type-safe, giảm boilerplate code.
+
+**API Interface:**
+
+```csharp
+// File: src/MyShop.Client/ApiServer/IAuthApi.cs
+public interface IAuthApi
+{
+    [Post("/api/v1/auth/login")]
+    Task<ApiResponse<LoginResponse>> LoginAsync([Body] LoginRequest request);
+    
+    [Post("/api/v1/auth/register")]
+    Task<ApiResponse<CreateUserResponse>> RegisterAsync([Body] CreateUserRequest request);
+    
+    [Get("/api/v1/auth/me")]
+    Task<ApiResponse<UserInfoResponse>> GetCurrentUserAsync();
+}
+```
+
+**Đăng ký Refit trong DI:**
+
+```csharp
+services.AddRefitClient<IAuthApi>()
+    .ConfigureHttpClient(client =>
+    {
+        client.BaseAddress = new Uri(AppConfig.Instance.ApiBaseUrl);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    })
+    .AddHttpMessageHandler<AuthHeaderHandler>(); // Auto add JWT token
+```
+
+**AuthHeaderHandler - Automatic JWT Injection:**
+
+```csharp
+public class AuthHeaderHandler : DelegatingHandler
+{
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request, 
+        CancellationToken cancellationToken)
+    {
+        var token = CredentialHelper.GetToken();
+        
+        if (!string.IsNullOrEmpty(token))
+        {
+            request.Headers.Authorization = 
+                new AuthenticationHeaderValue("Bearer", token);
+        }
+        
+        return await base.SendAsync(request, cancellationToken);
+    }
+}
+```
+
+**Lợi ích:**
+- **Type-safe:** Compile-time checking cho API calls.
+- **Less boilerplate:** Không cần viết HttpClient code thủ công.
+- **Testable:** Dễ dàng mock IAuthApi trong tests.
+- **Automatic serialization:** JSON serialization/deserialization tự động.
+
+---
+
+#### 4.3.7. MVVM Toolkit Usage
 
 #### CommunityToolkit.Mvvm
 
@@ -1484,6 +1987,56 @@ public partial class UserModel : ObservableObject
 ```
 
 Khi `IsActive` thay đổi → UI tự động cập nhật (không cần viết thủ công `OnPropertyChanged`).
+
+---
+
+#### AsyncRelayCommand & Cancellation Support
+
+Để xử lý async operations và hỗ trợ cancellation:
+
+```csharp
+public partial class LoginViewModel : BaseViewModel
+{
+    [RelayCommand(CanExecute = nameof(CanAttemptLogin), IncludeCancelCommand = true)]
+    private async Task AttemptLoginAsync(CancellationToken cancellationToken)
+    {
+        SetLoadingState(true);
+        
+        var result = await _authRepository.LoginAsync(Username, Password);
+        
+        if (result.IsSuccess)
+        {
+            // Handle success
+        }
+        
+        SetLoadingState(false);
+    }
+    
+    private bool CanAttemptLogin() => IsFormValid && !IsLoading;
+}
+```
+
+**Lợi ích:**
+- `[RelayCommand]` tự động tạo `AttemptLoginCommand` và `AttemptLoginCancelCommand`.
+- `CanExecute` tự động disable button khi không hợp lệ.
+- `IncludeCancelCommand = true` cho phép cancel operation.
+
+---
+
+#### NotifyPropertyChangedFor & NotifyCanExecuteChangedFor
+
+Tự động notify các property/command phụ thuộc:
+
+```csharp
+[ObservableProperty]
+[NotifyPropertyChangedFor(nameof(IsFormValid))]
+[NotifyCanExecuteChangedFor(nameof(AttemptLoginCommand))]
+private string _username = string.Empty;
+```
+
+Khi `Username` thay đổi:
+- `IsFormValid` property tự động notify UI.
+- `AttemptLoginCommand` tự động re-evaluate `CanExecute`.
 
 ---
 
@@ -1844,7 +2397,171 @@ Products[0].Stock--;
 
 ---
 
-### 5.5. Factory Pattern _(Frontend: dùng trong tạo ViewModel hoặc Dialog)_
+### 5.5. Strategy Pattern (Frontend - Role-Based Navigation)
+
+**[PHÂN CÔNG: FRONTEND DEVELOPER]**
+
+#### **Mục đích**
+
+Strategy Pattern được sử dụng để xử lý logic khác nhau cho từng user role mà không cần sử dụng nhiều if-else hoặc switch statements rải rác trong code.
+
+- **Tách biệt logic theo role:** Mỗi role có một strategy riêng định nghĩa dashboard page và permissions.
+- **Dễ mở rộng:** Thêm role mới chỉ cần tạo strategy mới, không ảnh hưởng code cũ.
+- **Open/Closed Principle:** Open for extension, closed for modification.
+
+---
+
+#### **Implementation**
+
+**1. Strategy Interface:**
+
+```csharp
+// File: src/MyShop.Client/Core/Strategies/IRoleStrategy.cs
+public interface IRoleStrategy
+{
+    Type GetDashboardPageType();
+    bool CanAccessFeature(string featureName);
+    string GetRoleName();
+}
+```
+
+**2. Concrete Strategies:**
+
+```csharp
+// AdminDashboardStrategy.cs
+public class AdminDashboardStrategy : IRoleStrategy
+{
+    public Type GetDashboardPageType() => typeof(AdminDashboardPage);
+    
+    public bool CanAccessFeature(string featureName) => true; // Full access
+    
+    public string GetRoleName() => "Administrator";
+}
+
+// SalesmanDashboardStrategy.cs
+public class SalesmanDashboardStrategy : IRoleStrategy
+{
+    public Type GetDashboardPageType() => typeof(SalesmanDashboardPage);
+    
+    public bool CanAccessFeature(string featureName)
+    {
+        // Limited features
+        return featureName switch
+        {
+            "ViewProducts" => true,
+            "CreateOrder" => true,
+            "ManageUsers" => false,
+            "ViewReports" => false,
+            _ => false
+        };
+    }
+    
+    public string GetRoleName() => "Sales Agent";
+}
+
+// CustomerDashboardStrategy.cs
+public class CustomerDashboardStrategy : IRoleStrategy
+{
+    public Type GetDashboardPageType() => typeof(CustomerDashboardPage);
+    
+    public bool CanAccessFeature(string featureName)
+    {
+        // Very limited features
+        return featureName switch
+        {
+            "ViewProducts" => true,
+            "ViewOrders" => true,
+            _ => false
+        };
+    }
+    
+    public string GetRoleName() => "Customer";
+}
+```
+
+**3. Strategy Factory:**
+
+```csharp
+// File: src/MyShop.Client/Core/Strategies/RoleStrategyFactory.cs
+public class RoleStrategyFactory : IRoleStrategyFactory
+{
+    private readonly IEnumerable<IRoleStrategy> _strategies;
+    
+    public RoleStrategyFactory(IEnumerable<IRoleStrategy> strategies)
+    {
+        _strategies = strategies;
+    }
+    
+    public IRoleStrategy GetStrategy(UserRole role)
+    {
+        return role switch
+        {
+            UserRole.Admin => _strategies.OfType<AdminDashboardStrategy>().First(),
+            UserRole.Salesman => _strategies.OfType<SalesmanDashboardStrategy>().First(),
+            UserRole.Customer => _strategies.OfType<CustomerDashboardStrategy>().First(),
+            _ => throw new ArgumentException($"Unknown role: {role}")
+        };
+    }
+}
+```
+
+**4. Sử dụng trong ViewModel:**
+
+```csharp
+// LoginViewModel.cs
+public partial class LoginViewModel : BaseViewModel
+{
+    private readonly IRoleStrategyFactory _roleStrategyFactory;
+    private readonly INavigationService _navigationService;
+    
+    [RelayCommand]
+    private async Task AttemptLoginAsync()
+    {
+        var result = await _authRepository.LoginAsync(Username, Password);
+        
+        if (result.IsSuccess && result.Data != null)
+        {
+            var user = result.Data;
+            
+            // Sử dụng Strategy Pattern
+            var primaryRole = user.GetPrimaryRole();
+            var strategy = _roleStrategyFactory.GetStrategy(primaryRole);
+            
+            // Navigate đến dashboard tương ứng
+            var pageType = strategy.GetDashboardPageType();
+            _navigationService.NavigateTo(pageType, user);
+            
+            _toastHelper.ShowSuccess($"Welcome back, {strategy.GetRoleName()}!");
+        }
+    }
+}
+```
+
+**5. Đăng ký trong DI:**
+
+```csharp
+// Bootstrapper.cs
+services.AddSingleton<IRoleStrategy, AdminDashboardStrategy>();
+services.AddSingleton<IRoleStrategy, SalesmanDashboardStrategy>();
+services.AddSingleton<IRoleStrategy, CustomerDashboardStrategy>();
+services.AddSingleton<IRoleStrategyFactory, RoleStrategyFactory>();
+```
+
+---
+
+#### **Lợi ích**
+
+| Lợi ích | Giải thích |
+|---------|-----------|
+| **Tách biệt logic role** | Mỗi role có class riêng, không lẫn lộn code. |
+| **Dễ mở rộng** | Thêm role mới không cần sửa code cũ. |
+| **Testable** | Có thể test từng strategy độc lập. |
+| **Áp dụng SOLID** | Tuân theo Open/Closed và Single Responsibility. |
+| **Giảm if-else** | Thay vì nhiều if-else rải rác, logic tập trung trong strategies. |
+
+---
+
+### 5.6. Factory Pattern _(Frontend: dùng trong tạo ViewModel hoặc Dialog)_
 
 **Mục đích:**
 Tạo ra các đối tượng (ViewModel, Dialog, hoặc API service) mà không cần lộ cách khởi tạo cụ thể.
@@ -1887,7 +2604,7 @@ public class ViewModelFactory : IViewModelFactory
 
 ---
 
-### 5.6. Dependency Injection Pattern (Frontend: WinUI + Refit Services)
+### 5.7. Dependency Injection Pattern (Frontend: WinUI + Refit Services)
 
 **Mục đích:**
 Cung cấp dependency (như `ApiClient`, `NavigationService`, `DialogService`) cho các ViewModel mà **không cần khởi tạo trực tiếp**.
@@ -1927,7 +2644,7 @@ public partial class App : Application
 
 ---
 
-### 5.7. State Pattern _(Frontend: cho Login, Role, Theme, hoặc Navigation State)_
+### 5.8. State Pattern _(Frontend: cho Login, Role, Theme, hoặc Navigation State)_
 
 **Mục đích:**
 Cho phép hệ thống **thay đổi hành vi động** khi trạng thái ứng dụng thay đổi (user login/logout, role đổi, theme đổi).
@@ -1969,7 +2686,7 @@ public class AuthenticatedState : UserState
 
 ---
 
-### 5.8. Template Method Pattern _(Frontend: trong BaseViewModel và BasePage)_
+### 5.9. Template Method Pattern _(Frontend: trong BaseViewModel và BasePage)_
 
 **Mục đích:**
 Định nghĩa khung xử lý chung cho các ViewModel, cho phép subclass override từng bước cụ thể.
@@ -2007,7 +2724,7 @@ public class ProductsViewModel : BaseViewModel
 
 ---
 
-### 5.9. Adapter Pattern _(Frontend: trong API Layer – Refit mapping)_
+### 5.10. Adapter Pattern _(Frontend: trong API Layer – Refit mapping)_
 
 **Mục đích:**
 Chuyển đổi dữ liệu từ tầng API (DTO) sang Model nội bộ của ViewModel mà không làm thay đổi logic gọi API.
@@ -2046,7 +2763,7 @@ public class ProductAdapter
 
 ---
 
-### 5.10. Strategy Pattern (AI)
+### 5.11. Strategy Pattern (AI)
 
 **[PHÂN CÔNG: AI DEVELOPER]**
 
@@ -2313,6 +3030,92 @@ Việc đặt tên nhất quán là yếu tố cơ bản nhất để tạo ra m
 
 [Frontend Developer điền thêm]
 
+##### XAML & Binding
+- Ưu tiên `x:Bind` thay cho `Binding` (hiệu năng + kiểm tra biên dịch). Chỉ dùng `Binding` khi `DataContext` thay đổi động.
+- Mặc định `Mode=OneWay`; với input dùng `Mode=TwoWay` và `UpdateSourceTrigger=PropertyChanged` khi cần cập nhật tức thời.
+- Đặt tên phần tử PascalCase + hậu tố rõ nghĩa: `LoginButton`, `UsernameTextBox`, `RootGrid`.
+- Hạn chế logic ở code-behind; chỉ xử lý wiring UI.
+- Dùng `x:Load`/`DeferLoadStrategy="Lazy"` cho UI nặng, ít xuất hiện.
+
+##### Converters
+- Lưu tại `Views/Converters`, tên kết thúc `Converter` (ví dụ: `StringToVisibilityConverter`).
+- Khai báo trong `App.xaml` với `x:Key` ngắn gọn, mô tả đúng chức năng (ví dụ: `StringToVisibilityConverter`, `BoolNegationConverter`, `BoolToVisibilityConverter`, `ValidationErrorConverter`).
+- Chỉ dùng khi không thể giải quyết bằng `x:Bind`, `TargetNullValue`, `FallbackValue`, `StringFormat`.
+
+##### MVVM (CommunityToolkit.Mvvm)
+- ViewModel: PascalCase + hậu tố `ViewModel` (mỗi `Page` một VM). Thuộc tính dùng `[ObservableProperty]`, lệnh dùng `[RelayCommand]`. Lệnh async hậu tố `Async`.
+- Tránh `async void` (trừ event UI). Phương thức public trả `Task/Task<T>`.
+- DI: Resolve VM qua `App.Current.Services.GetRequiredService<TViewModel>()`. Không inject service trực tiếp vào `Page` ngoài mục đích khởi tạo VM.
+- Phân tách service gọi API ra lớp riêng, không đặt trong VM.
+
+##### Điều hướng (Navigation)
+- Tập trung hoá qua `INavigationService`. Không gọi `Frame.Navigate` trực tiếp ngoài service.
+- Điều hướng bằng kiểu trang + tham số: `NavigateTo(typeof(TargetPage), param)`.
+- Trang nhận tham số trong `OnNavigatedTo` (hoặc pattern `INavigationAware`), validate null/kiểu.
+- `NavigationCacheMode`: `Required` cho dashboard/stateful; còn lại `Default`.
+
+##### Dialogs, Popups & Windows
+- Trước khi `ShowAsync()` với `ContentDialog`, luôn gán `XamlRoot` từ `Window.Content.XamlRoot`. Tận dụng `ToastHelper` để thống nhất hiển thị (ví dụ: `Initialize`, `ShowSuccess/Error/Info`, `ShowConnectionErrorAsync`).
+- Không chặn UI thread; mọi dialog đều `await`.
+- Với nhiều cửa sổ, quản lý vòng đời tránh rò rỉ; gán `XamlRoot` đúng cửa sổ đang hoạt động.
+
+##### Tài nguyên, Styles & Theming
+- Giữ `XamlControlsResources` trong `App.xaml`.
+- Tách `ResourceDictionary` theo nhóm: `Resources/Colors.xaml`, `Resources/Brushes.xaml`, `Resources/Styles.xaml`, `Resources/Converters.xaml`; merge một lần ở `App.xaml`.
+- Dùng `ThemeDictionaries` hỗ trợ Light/Dark/HighContrast. Tránh hard-code màu; ưu tiên `ThemeResource`.
+
+##### Cấu trúc & Đặt tên
+- Thư mục: `Views/Pages`, `Views/Controls`, `Views/Converters`, `ViewModels`, `Services` (`Interfaces`/`Implementations`), `Resources`.
+- Tên:
+  - Page kết thúc `Page` (ví dụ: `LoginPage`); UserControl kết thúc `Control`.
+  - Interface bắt đầu `I` (ví dụ: `INavigationService`, `IToastHelper`).
+  - Service kết thúc `Service`, Helper kết thúc `Helper`, Converter kết thúc `Converter`.
+- Tên tệp trùng tên lớp/kiểu.
+
+##### Hiệu năng
+- Ưu tiên `x:Bind`, tránh binding phức tạp trong `ItemsPanel`.
+- Danh sách dài: bật ảo hoá (ListView/GridView) hoặc `ItemsRepeater`.
+- Giảm độ sâu cây visual; dùng `Spacing` thay vì `Margin` chồng chéo.
+- Công việc nặng: nền (`Task.Run`) và cập nhật UI qua `DispatcherQueue.TryEnqueue`.
+
+##### Xác thực & Hiển thị lỗi
+- Biểu mẫu: thuộc tính lỗi trong VM (ví dụ: `UsernameError`) hoặc `INotifyDataErrorInfo` cho quy mô lớn.
+- Thông điệp lỗi ngắn gọn, gần control; thống nhất màu/icon.
+- Tận dụng converters sẵn có như trong `App.xaml`.
+
+##### Trợ năng (Accessibility) & Nội địa hoá (Localization)
+- Thêm `AutomationProperties.Name/HelpText` cho control tương tác; thứ tự Tab hợp lý, có `AccessKey` cho hành động chính.
+- Localization qua `x:Uid`; chuỗi trong `Resources.resw`. Không hard-code text trong XAML/C#.
+
+##### Mạng & API
+- Dùng `HttpClientFactory` + Refit (`Refit.HttpClientFactory`, `Refit.Newtonsoft.Json`). Cấu hình `HttpClient` trong DI, không tạo mới thủ công.
+- Thiết lập timeout, phân loại lỗi (network/server/validation) và hiển thị nhất quán qua `ToastHelper`.
+- Retry/circuit-breaker nếu cần: đặt ở Service layer (có thể dùng Polly).
+
+##### Vòng đời ứng dụng
+- `OnLaunched` tối giản: khởi tạo DI, điều hướng trang đầu tiên. Bắt lỗi và ghi log.
+- Thiết lập theme, Backdrop, TitleBar ở `MainWindow`, tránh cấu hình lặp lại per-page.
+- Lưu/khôi phục trạng thái phù hợp với `NavigationCacheMode`.
+
+##### Logging & Chẩn đoán
+- Dùng `ILogger<T>` cho log có cấu trúc. Không log dữ liệu nhạy cảm.
+- Mức log: `Information` cho luồng chính, `Warning/Error` cho sự cố.
+- Đường đi xử lý lỗi UI thống nhất (toast + optional điều hướng trang hỗ trợ).
+
+##### Kiểm thử thủ công & Checklist PR
+- Kiểm Light/Dark/HighContrast, back navigation, dữ liệu tham số điều hướng, localization.
+- PR checklist:
+  - [ ] Theo style XAML/C#
+  - [ ] Không logic nghiệp vụ trong View
+  - [ ] Không `async void` (trừ event)
+  - [ ] Không block UI
+  - [ ] Log phù hợp
+
+##### Chuẩn mã C#
+- `PascalCase` cho public, `camelCase` cho tham số, `_camelCase` cho trường `private readonly`.
+- Dùng `var` khi kiểu rõ ràng.
+- Nullable bật (`<Nullable>enable</Nullable>`). Async hậu tố `Async`, trả `Task/Task<T>`.
+
 #### 6.1.6. Python Conventions (AI)
 
 **[PHÂN CÔNG: AI DEVELOPER]**
@@ -2346,7 +3149,7 @@ Tham khảo: [PEP 8 Style Guide](https://peps.python.org/pep-0008/)
 
 ##### **UI Testing Approach**
 
-Mục tiêu của manual testing là **đảm bảo giao diện người dùng (UI)** và **luồng thao tác (UX)** hoạt động đúng như thiết kế Figma Make, đồng thời xác nhận các binding dữ liệu, command và navigation hoạt động ổn định trong mô hình **MVVM**.
+Mục tiêu của manual testing là **đảm bảo giao diện người dùng (UI)** và **luồng thao tác (UX)** hoạt động đúng như thiết kế Figma, đồng thời xác nhận các binding dữ liệu, command và navigation hoạt động ổn định trong mô hình **MVVM**.
 Việc test được thực hiện trực tiếp trên ứng dụng WinUI 3 build bằng chế độ Debug.
 
 **Phương pháp thực hiện:**
@@ -3428,7 +4231,7 @@ Dự án MyShop2025 được triển khai từ **01/10/2025 đến 02/11/2025**,
 ### B. Link quan trọng
 
 - **Repository:** [GitHub](https://github.com/05-victor/MyShop2025)
-- **Figma Design:** [Figma link]
+- **Figma Design:** [Figma link](https://www.figma.com/design/PcHAE5fWwCBBIVyM5IEQbZ/MyShop2025?node-id=0-1&t=3vviC6L7HyownqWW-1)
 - **Project Management:**
   - [GitHub](https://github.com/05-victor/MyShop2025)
   - [Trello](https://trello.com/invite/b/6900a46d2e34563da489c3f5/ATTId5e7db9a9b2e7dd86ceca2b4bdfc89d419C4829F/window)
